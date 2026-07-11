@@ -362,8 +362,8 @@ function darkTextFor(hex){
    3. localStorage — per-browser fallback so the app never looks blank/broken
    Fill these in after creating your Supabase project (Project Settings > API):
 */
-const SUPABASE_URL = "";        // e.g. "https://xxxxx.supabase.co"
-const SUPABASE_ANON_KEY = "";   // the "anon public" key
+const SUPABASE_URL = "https://ukdicunwepcixwturobq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZGljdW53ZXBjaXh3dHVyb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODUyNTUsImV4cCI6MjA5OTM2MTI1NX0.V9ZZJgXmI9fEbWaNcIUHrWlUz-Z4YpiowrwUTVjUp4s";
 
 const HAS_CLAUDE_STORAGE = typeof window.storage !== 'undefined';
 const HAS_SUPABASE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
