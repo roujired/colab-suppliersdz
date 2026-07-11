@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Colab. Suppliers Directory</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --dark-purple:#1B0722;
+  --deep-purple:#6A00A8;
+  --magenta:#C4007A;
+  --orange-red:#FF3B3B;
+  --soft-purple:#B1A7FD;
+  --smooth-orange:#FFBA1F;
+  --bg:#140416;
+  --panel:#20082A;
+  --panel2:#2A0E38;
+  --border:#3D1B4D;
+  --text:#F3EAF7;
+  --text-dim:#B79CC7;
+  --text-mute:#8A6E9C;
+  --radius:14px;
+  --tier-preferred:#3FBF7F;
+  --tier-backup:#4FA6E0;
+  --tier-new:var(--smooth-orange);
+  --tier-blacklisted:var(--orange-red);
+  font-family:'Onest',Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);}
+.app{max-width:1280px;margin:0 auto;padding:24px 20px 60px;}
+.app[dir="rtl"] .tabbar,.app[dir="rtl"] .contact-block{direction:rtl;}
+h1,h2,h3{font-weight:600;margin:0;}
+button,input,select,textarea{font-family:inherit;color:var(--text);}
+input,select,textarea{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;}
+input:focus,select:focus,textarea:focus{outline:1px solid var(--soft-purple);}
+button{cursor:pointer;}
+.btn{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--text);}
+.btn:hover{border-color:var(--soft-purple);}
+.btn-primary{background:linear-gradient(90deg,var(--deep-purple),var(--magenta));border:none;color:#fff;font-weight:600;}
+.btn-primary:hover{opacity:0.9;}
+.btn-danger{border-color:var(--orange-red);color:var(--orange-red);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+
+.header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{width:40px;height:40px;border-radius:10px;background:var(--dark-purple);display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid var(--border);}
+.brand-title{font-size:20px;font-weight:600;}
+.brand-sub{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.lang-switch{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.lang-switch button{background:var(--panel2);border:none;padding:7px 10px;font-size:12px;border-inline-end:1px solid var(--border);}
+.lang-switch button:last-child{border-inline-end:none;}
+.lang-switch button.active{background:var(--deep-purple);color:#fff;}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;}
+.stat-value{font-size:24px;font-weight:600;margin-top:4px;}
+.stat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.chip{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--panel2);border:1px solid var(--border);color:var(--text-dim);}
+
+.ai-bar{background:linear-gradient(90deg,rgba(106,0,168,0.25),rgba(196,0,122,0.25));border:1px solid var(--soft-purple);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;}
+.ai-bar-row{display:flex;gap:8px;}
+.ai-bar-row input{flex:1;}
+.ai-result{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:13px;line-height:1.6;white-space:pre-wrap;}
+.ai-loading{font-size:12px;color:var(--text-dim);margin-top:8px;}
+
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;align-items:center;}
+.filters input[type="text"]{min-width:180px;flex:1;}
+.filters select{min-width:120px;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:border-color .15s;position:relative;}
+.card:hover{border-color:var(--soft-purple);}
+.card-top{display:flex;gap:10px;align-items:flex-start;}
+.card-logo{width:44px;height:44px;border-radius:10px;background:var(--panel2);flex-shrink:0;object-fit:cover;border:1px solid var(--border);}
+.card-logo-fallback{width:44px;height:44px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--soft-purple);}
+.card-name{font-size:15px;font-weight:600;}
+.card-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.cat-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
+.tier-badge{position:absolute;top:14px;inset-inline-end:14px;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600;}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.tag{font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);color:var(--text-dim);}
+.card-meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:var(--text-dim);}
+.stars{color:var(--smooth-orange);font-size:12px;}
+.card-actions{display:flex;gap:6px;margin-top:10px;}
+.icon-btn{width:30px;height:30px;border-radius:8px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;}
+.icon-btn:hover{border-color:var(--soft-purple);}
+
+.empty{text-align:center;padding:60px 20px;color:var(--text-dim);}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:50;display:none;}
+.overlay.open{display:block;}
+.panel{position:fixed;top:0;inset-inline-end:0;width:min(460px,92vw);height:100%;background:var(--panel);border-inline-start:1px solid var(--border);z-index:51;overflow-y:auto;transform:translateX(100%);transition:transform .2s;padding:20px;}
+.app[dir="rtl"] .panel{transform:translateX(-100%);}
+.panel.open{transform:translateX(0);}
+.panel-close{position:absolute;top:16px;inset-inline-end:16px;background:none;border:none;font-size:20px;color:var(--text-dim);}
+.panel h2{margin-bottom:2px;}
+.section{margin-top:20px;padding-top:14px;border-top:1px solid var(--border);}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--soft-purple);margin-bottom:8px;}
+.field-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13px;}
+.field-label{color:var(--text-dim);flex-shrink:0;}
+.field-val{text-align:end;word-break:break-word;}
+.contact-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;font-size:13px;}
+.contact-card .name{font-weight:600;}
+.contact-card .role{color:var(--text-dim);font-size:11px;}
+.contact-links{display:flex;gap:6px;margin-top:6px;}
+.log-entry{border-inline-start:2px solid var(--soft-purple);padding-inline-start:10px;margin-bottom:8px;font-size:12px;}
+.log-date{color:var(--text-dim);font-size:11px;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid.full{grid-template-columns:1fr;}
+.form-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.form-field label{font-size:11px;color:var(--text-dim);}
+.contact-block{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;}
+.warn-box{background:rgba(255,59,59,0.12);border:1px solid var(--orange-red);border-radius:10px;padding:10px;font-size:12px;margin-bottom:10px;}
+
+.cat-checklist{display:flex;flex-wrap:wrap;gap:6px;max-height:170px;overflow-y:auto;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--panel2);}
+.cat-check-item{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 9px;border-radius:20px;border:1px solid var(--border);cursor:pointer;user-select:none;}
+.cat-check-item input{margin:0;}
+
+.cat-manage-row{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--panel2);}
+.cat-manage-row input[type="text"]{flex:1;}
+.cat-manage-row input[type="color"]{width:34px;height:30px;padding:2px;border-radius:6px;}
+.swatch{width:18px;height:18px;border-radius:5px;border:1px solid var(--border);flex-shrink:0;}
+
+.quick-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
+.star-picker{display:flex;gap:3px;font-size:18px;cursor:pointer;}
+.star-picker span{color:var(--text-mute);}
+.star-picker span.filled{color:var(--smooth-orange);}
+
+.hidden{display:none !important;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+</style>
+</head>
+<body>
+<div class="app" id="app" dir="ltr">
+  <h1 class="sr-only">Colab. suppliers directory dashboard</h1>
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-mark">🐦‍⬛</div>
+      <div>
+        <div class="brand-title" data-t="title">Suppliers Directory</div>
+        <div class="brand-sub" data-t="subtitle">Colab. — Observe. Connect. Create.</div>
+        <div class="brand-sub" id="syncBadge" style="margin-top:2px"></div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button data-lang="en">EN</button>
+        <button data-lang="fr">FR</button>
+        <button data-lang="ar">AR</button>
+      </div>
+      <button class="btn" id="btnManageCats" data-t="manageCategories">Manage categories</button>
+      <button class="btn" id="btnExport" data-t="exportCsv">Export CSV</button>
+      <button class="btn" id="btnImport" data-t="importCsv">Import CSV</button>
+      <input type="file" id="fileImport" accept=".csv" class="hidden">
+      <button class="btn btn-primary" id="btnAdd" data-t="addSupplier">+ Add supplier</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="ai-bar">
+    <div class="ai-bar-row">
+      <input type="text" id="aiQuery" data-t-ph="aiPlaceholder" placeholder="e.g. I need a cheap trophy maker in Algiers available fast">
+      <button class="btn btn-primary" id="btnAiFind" data-t="aiFindBtn">Ask AI</button>
+    </div>
+    <div id="aiLoading" class="ai-loading hidden" data-t="aiThinking">Thinking...</div>
+    <div id="aiResult" class="ai-result hidden"></div>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="fSearch" data-t-ph="searchPh" placeholder="Search suppliers...">
+    <select id="fCategory"></select>
+    <select id="fStatus"></select>
+    <select id="fTier"></select>
+    <select id="fCity"></select>
+    <select id="fRating"></select>
+    <select id="fSort"></select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty hidden" id="emptyState" data-t="emptyState">No suppliers yet. Add your first one.</div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="panel" id="detailPanel"></div>
+<div class="panel" id="formPanel" style="width:min(560px,94vw)"></div>
+<div class="panel" id="categoryPanel" style="width:min(460px,94vw)"></div>
+
+<script>
+const I18N = {
+  en: {
+    title:"Suppliers Directory", subtitle:"Colab. — Observe. Connect. Create.",
+    exportCsv:"Export CSV", importCsv:"Import CSV", addSupplier:"+ Add supplier", manageCategories:"Manage categories",
+    aiPlaceholder:"e.g. I need a cheap trophy maker in Algiers available fast",
+    aiFindBtn:"Ask AI", aiThinking:"Thinking...",
+    searchPh:"Search suppliers...", emptyState:"No suppliers yet. Add your first one.",
+    statTotal:"Total suppliers", statActive:"Active", statTopCat:"By category", statTopRated:"Top rated (4-5★)",
+    allCategories:"All categories", allStatus:"All status", allTiers:"All tiers", allCities:"All cities", allRatings:"All ratings",
+    sortName:"Sort: Name", sortRating:"Sort: Rating", sortLast:"Sort: Last contacted",
+    tierPreferred:"Preferred", tierBackup:"Backup", tierNew:"New", tierBlacklisted:"Blacklisted",
+    statusActive:"Active", statusInactive:"Inactive",
+    edit:"Edit", delete:"Delete", close:"Close",
+    save:"Save supplier", cancel:"Cancel",
+    secIdentity:"Identity", secStatus:"Status", secContacts:"Contacts", secFinancial:"Financial",
+    secLogistics:"Logistics", secMedia:"Media & links", secHistory:"History & notes", secLog:"Interaction log",
+    fName:"Supplier name", fCategories:"Categories (select all that apply)", fTags:"Tags (comma separated)", fDescription:"Description",
+    fTier:"Priority tier", fStatus:"Status", fAvailability:"Availability", fRating:"Rating (1-5)", fReview:"Review notes",
+    fWorkAgain:"Would work again", fBlacklistReason:"Blacklist reason",
+    fContactName:"Name", fContactRole:"Role", fContactPhone:"Phone", fContactWhatsapp:"WhatsApp", fContactEmail:"Email",
+    addContact:"+ Add contact", removeContact:"Remove",
+    fPaymentTerms:"Payment terms", fPaymentMethod:"Preferred payment method", fBank:"Bank / CCP info", fInvoiceHistory:"Invoice history notes",
+    fCity:"City / zone", fDelivery:"Delivery", fTurnaround:"Turnaround / deadline", fMinQty:"Min quantity", fLanguages:"Language(s)",
+    fPriceRange:"Price range", fLastQuoted:"Last quoted price",
+    fSocial:"Social media", fWebsite:"Website / link", fPortfolio:"Portfolio link", fPhotos:"Photo/sample links (one per line)",
+    fPriceList:"Price list link", fCatalog:"Catalog link", fContract:"Contract link",
+    fHowMet:"How we met", fProjects:"Project(s) used on", fLastContacted:"Last contacted",
+    fNewLogNote:"Add a log entry...", addLogEntry:"+ Add entry",
+    aiAutoFillLabel:"Paste raw info about the supplier, then let AI fill the form",
+    aiAutoFillBtn:"AI auto-fill", aiAutoFilling:"Filling form...",
+    duplicateWarning:"⚠ Possible duplicate: a supplier with a similar name or phone already exists.",
+    confirmDelete:"Delete this supplier? This cannot be undone.",
+    yes:"Yes", no:"No",
+    quickReview:"Quick review", quickReviewHint:"Update these instantly while reviewing — saved automatically.",
+    manageCategoriesTitle:"Manage categories", addCategoryBtn:"+ Add category", categoryNamePh:"Category name",
+    categoryGroupPh:"Group (e.g. Printing & Production)", categoryInUse:"used by", suppliers:"supplier(s)",
+    confirmDeleteCategory:"Delete this category? It will be removed from any suppliers using it.",
+    categoryNameRequired:"Enter a category name first.",
+  },
+  fr: {
+    title:"Répertoire fournisseurs", subtitle:"Colab. — Observe. Connect. Create.",
+    exportCsv:"Exporter CSV", importCsv:"Importer CSV", addSupplier:"+ Ajouter un fournisseur", manageCategories:"Gérer les catégories",
+    aiPlaceholder:"ex. je cherche un fabricant de trophées pas cher à Alger, dispo rapidement",
+    aiFindBtn:"Demander à l'IA", aiThinking:"Réflexion...",
+    searchPh:"Rechercher un fournisseur...", emptyState:"Aucun fournisseur pour l'instant. Ajoutez-en un.",
+    statTotal:"Total fournisseurs", statActive:"Actifs", statTopCat:"Par catégorie", statTopRated:"Mieux notés (4-5★)",
+    allCategories:"Toutes catégories", allStatus:"Tous statuts", allTiers:"Tous niveaux", allCities:"Toutes villes", allRatings:"Toutes notes",
+    sortName:"Trier : Nom", sortRating:"Trier : Note", sortLast:"Trier : Dernier contact",
+    tierPreferred:"Préféré", tierBackup:"Secours", tierNew:"Nouveau", tierBlacklisted:"Liste noire",
+    statusActive:"Actif", statusInactive:"Inactif",
+    edit:"Modifier", delete:"Supprimer", close:"Fermer",
+    save:"Enregistrer", cancel:"Annuler",
+    secIdentity:"Identité", secStatus:"Statut", secContacts:"Contacts", secFinancial:"Finances",
+    secLogistics:"Logistique", secMedia:"Médias et liens", secHistory:"Historique et notes", secLog:"Journal des échanges",
+    fName:"Nom du fournisseur", fCategories:"Catégories (sélectionnez tout ce qui s'applique)", fTags:"Tags (séparés par des virgules)", fDescription:"Description",
+    fTier:"Niveau de priorité", fStatus:"Statut", fAvailability:"Disponibilité", fRating:"Note (1-5)", fReview:"Avis / notes",
+    fWorkAgain:"Retravailler avec eux", fBlacklistReason:"Raison de la liste noire",
+    fContactName:"Nom", fContactRole:"Rôle", fContactPhone:"Téléphone", fContactWhatsapp:"WhatsApp", fContactEmail:"Email",
+    addContact:"+ Ajouter un contact", removeContact:"Retirer",
+    fPaymentTerms:"Conditions de paiement", fPaymentMethod:"Moyen de paiement préféré", fBank:"Infos banque / CCP", fInvoiceHistory:"Historique des factures",
+    fCity:"Ville / zone", fDelivery:"Livraison", fTurnaround:"Délai", fMinQty:"Quantité minimum", fLanguages:"Langue(s)",
+    fPriceRange:"Gamme de prix", fLastQuoted:"Dernier prix proposé",
+    fSocial:"Réseaux sociaux", fWebsite:"Site web / lien", fPortfolio:"Lien portfolio", fPhotos:"Liens photos/échantillons (un par ligne)",
+    fPriceList:"Lien liste de prix", fCatalog:"Lien catalogue", fContract:"Lien contrat",
+    fHowMet:"Comment on s'est connu", fProjects:"Projet(s) utilisé(s)", fLastContacted:"Dernier contact",
+    fNewLogNote:"Ajouter une entrée...", addLogEntry:"+ Ajouter",
+    aiAutoFillLabel:"Collez les infos brutes sur le fournisseur, l'IA remplira le formulaire",
+    aiAutoFillBtn:"Remplissage IA", aiAutoFilling:"Remplissage...",
+    duplicateWarning:"⚠ Doublon possible : un fournisseur avec un nom ou téléphone similaire existe déjà.",
+    confirmDelete:"Supprimer ce fournisseur ? Action irréversible.",
+    yes:"Oui", no:"Non",
+    quickReview:"Révision rapide", quickReviewHint:"Modifiez ces champs instantanément pendant la révision — enregistré automatiquement.",
+    manageCategoriesTitle:"Gérer les catégories", addCategoryBtn:"+ Ajouter une catégorie", categoryNamePh:"Nom de la catégorie",
+    categoryGroupPh:"Groupe (ex. Impression & Production)", categoryInUse:"utilisée par", suppliers:"fournisseur(s)",
+    confirmDeleteCategory:"Supprimer cette catégorie ? Elle sera retirée de tous les fournisseurs concernés.",
+    categoryNameRequired:"Entrez d'abord un nom de catégorie.",
+  },
+  ar: {
+    title:"دليل الموردين", subtitle:"Colab. — راقب. تواصل. أبدع.",
+    exportCsv:"تصدير CSV", importCsv:"استيراد CSV", addSupplier:"+ إضافة مورد", manageCategories:"إدارة الفئات",
+    aiPlaceholder:"مثال: أحتاج صانع كؤوس رخيص في الجزائر العاصمة متاح بسرعة",
+    aiFindBtn:"اسأل الذكاء الاصطناعي", aiThinking:"جارٍ التفكير...",
+    searchPh:"ابحث عن مورد...", emptyState:"لا يوجد موردون بعد. أضف أول مورد.",
+    statTotal:"إجمالي الموردين", statActive:"نشط", statTopCat:"حسب الفئة", statTopRated:"الأعلى تقييمًا (4-5★)",
+    allCategories:"كل الفئات", allStatus:"كل الحالات", allTiers:"كل المستويات", allCities:"كل المدن", allRatings:"كل التقييمات",
+    sortName:"ترتيب: الاسم", sortRating:"ترتيب: التقييم", sortLast:"ترتيب: آخر تواصل",
+    tierPreferred:"مفضّل", tierBackup:"احتياطي", tierNew:"جديد", tierBlacklisted:"قائمة سوداء",
+    statusActive:"نشط", statusInactive:"غير نشط",
+    edit:"تعديل", delete:"حذف", close:"إغلاق",
+    save:"حفظ المورد", cancel:"إلغاء",
+    secIdentity:"الهوية", secStatus:"الحالة", secContacts:"جهات الاتصال", secFinancial:"المعلومات المالية",
+    secLogistics:"اللوجستيات", secMedia:"الوسائط والروابط", secHistory:"السجل والملاحظات", secLog:"سجل التفاعلات",
+    fName:"اسم المورد", fCategories:"الفئات (اختر كل ما ينطبق)", fTags:"الوسوم (مفصولة بفواصل)", fDescription:"الوصف",
+    fTier:"مستوى الأولوية", fStatus:"الحالة", fAvailability:"التوفر", fRating:"التقييم (1-5)", fReview:"ملاحظات المراجعة",
+    fWorkAgain:"العمل معه مجددًا", fBlacklistReason:"سبب الإدراج في القائمة السوداء",
+    fContactName:"الاسم", fContactRole:"الدور", fContactPhone:"الهاتف", fContactWhatsapp:"واتساب", fContactEmail:"البريد الإلكتروني",
+    addContact:"+ إضافة جهة اتصال", removeContact:"إزالة",
+    fPaymentTerms:"شروط الدفع", fPaymentMethod:"طريقة الدفع المفضلة", fBank:"معلومات البنك / CCP", fInvoiceHistory:"سجل الفواتير",
+    fCity:"المدينة / المنطقة", fDelivery:"التوصيل", fTurnaround:"مدة التنفيذ", fMinQty:"الحد الأدنى للكمية", fLanguages:"اللغة (اللغات)",
+    fPriceRange:"نطاق السعر", fLastQuoted:"آخر سعر مقترح",
+    fSocial:"وسائل التواصل", fWebsite:"الموقع الإلكتروني / رابط", fPortfolio:"رابط الأعمال", fPhotos:"روابط صور/عينات (كل رابط في سطر)",
+    fPriceList:"رابط قائمة الأسعار", fCatalog:"رابط الكتالوج", fContract:"رابط العقد",
+    fHowMet:"كيف تعرفنا", fProjects:"المشروع (المشاريع) المستخدم فيها", fLastContacted:"آخر تواصل",
+    fNewLogNote:"أضف إدخالاً...", addLogEntry:"+ إضافة",
+    aiAutoFillLabel:"الصق معلومات خام عن المورد وسيقوم الذكاء الاصطناعي بملء النموذج",
+    aiAutoFillBtn:"تعبئة تلقائية بالذكاء الاصطناعي", aiAutoFilling:"جارٍ التعبئة...",
+    duplicateWarning:"⚠ تكرار محتمل: يوجد مورد باسم أو رقم هاتف مشابه بالفعل.",
+    confirmDelete:"حذف هذا المورد؟ لا يمكن التراجع عن هذا الإجراء.",
+    yes:"نعم", no:"لا",
+    quickReview:"مراجعة سريعة", quickReviewHint:"عدّل هذه الحقول فورًا أثناء المراجعة — يُحفظ تلقائيًا.",
+    manageCategoriesTitle:"إدارة الفئات", addCategoryBtn:"+ إضافة فئة", categoryNamePh:"اسم الفئة",
+    categoryGroupPh:"المجموعة (مثال: الطباعة والإنتاج)", categoryInUse:"مستخدمة من قبل", suppliers:"مورد",
+    confirmDeleteCategory:"حذف هذه الفئة؟ ستتم إزالتها من كل الموردين الذين يستخدمونها.",
+    categoryNameRequired:"أدخل اسم الفئة أولاً.",
+  }
+};
+
+const DEFAULT_CATEGORIES = [
+  {name:"Flyer & Poster Printing", color:"#FFD6E0", group:"Printing & Production"},
+  {name:"Large Format Printing", color:"#FFD6E0", group:"Printing & Production"},
+  {name:"Business Card Printing", color:"#FFD6E0", group:"Printing & Production"},
+  {name:"Pin & Badge Printing", color:"#FFD6E0", group:"Printing & Production"},
+  {name:"Packaging & Box Printing", color:"#FFD6E0", group:"Printing & Production"},
+  {name:"Sticker & Label Printing", color:"#FFD6E0", group:"Printing & Production"},
+  {name:"Woodwork & Carpentry", color:"#FFE8C8", group:"Physical & Craft"},
+  {name:"Lumberjack", color:"#FFE8C8", group:"Physical & Craft"},
+  {name:"3D Printing", color:"#CCF0FF", group:"Physical & Craft"},
+  {name:"Laser Cutting & Engraving", color:"#CCF0FF", group:"Physical & Craft"},
+  {name:"Metal & Ironwork", color:"#E0E0E0", group:"Physical & Craft"},
+  {name:"Foam & Styrofoam", color:"#FFF5CC", group:"Physical & Craft"},
+  {name:"Textile & Embroidery", color:"#D6F5D6", group:"Textile"},
+  {name:"Screen Printing on Fabric", color:"#D6F5D6", group:"Textile"},
+  {name:"Uniform & Workwear", color:"#D6F5D6", group:"Textile"},
+  {name:"Goodies & Promotional Gifts", color:"#FFD6F5", group:"Goodies & Gifts"},
+  {name:"Trophy & Award Making", color:"#FFD6F5", group:"Goodies & Gifts"},
+  {name:"Custom Packaging", color:"#FFD6F5", group:"Goodies & Gifts"},
+  {name:"Signage & Wayfinding", color:"#E8D6FF", group:"Events & Display"},
+  {name:"Stand & Exhibition Design", color:"#E8D6FF", group:"Events & Display"},
+  {name:"Event Logistics & Furniture", color:"#E8D6FF", group:"Events & Display"},
+  {name:"Inflatable & Structures", color:"#E8D6FF", group:"Events & Display"},
+  {name:"Photography Studio", color:"#FFFACC", group:"Other"},
+  {name:"Translation & Copywriting", color:"#D6ECFF", group:"Other"},
+  {name:"Delivery & Transport", color:"#D6FFE8", group:"Other"},
+  {name:"Other", color:"#EEEEEE", group:"Other"},
+];
+
+const TIER_COLORS = {Preferred:"var(--tier-preferred)", Backup:"var(--tier-backup)", New:"var(--tier-new)", Blacklisted:"var(--tier-blacklisted)"};
+
+let state = { lang:"en", suppliers:[], categories:DEFAULT_CATEGORIES.slice(), filters:{search:"",category:"",status:"",tier:"",city:"",rating:"",sort:"name"} };
+let editingId = null;
+
+function t(key){ return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key; }
+function uid(){ return 'sup_' + Math.random().toString(36).slice(2,10); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function darkTextFor(hex){
+  try{
+    const h = hex.replace('#','');
+    const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
+    const lum = (0.299*r+0.587*g+0.114*b);
+    return lum > 150 ? '#3a2a40' : '#f5f5f5';
+  }catch(e){ return '#3a2a40'; }
+}
+
+/* ---------- Storage adapter ----------
+   Tries, in order:
+   1. Claude.ai artifact storage (window.storage) — works only inside claude.ai
+   2. Supabase (shared, real-time-ish) — works once SUPABASE_URL/SUPABASE_ANON_KEY below are filled in
+   3. localStorage — per-browser fallback so the app never looks blank/broken
+   Fill these in after creating your Supabase project (Project Settings > API):
+*/
+const SUPABASE_URL = "";        // e.g. "https://xxxxx.supabase.co"
+const SUPABASE_ANON_KEY = "";   // the "anon public" key
+
+const HAS_CLAUDE_STORAGE = typeof window.storage !== 'undefined';
+const HAS_SUPABASE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+async function supabaseGet(key){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/colab_kv?key=eq.${encodeURIComponent(key)}&select=value`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+  });
+  if(!res.ok) throw new Error('Supabase GET failed: ' + res.status);
+  const rows = await res.json();
+  return rows.length ? rows[0].value : null;
+}
+async function supabaseSet(key, value){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/colab_kv`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify({ key, value })
+  });
+  if(!res.ok) throw new Error('Supabase SET failed: ' + res.status);
+}
+
+async function storageGet(key){
+  if(HAS_CLAUDE_STORAGE){
+    try{ const r = await window.storage.get(key, false); return r ? r.value : null; }catch(e){ return null; }
+  }
+  if(HAS_SUPABASE){
+    try{ return await supabaseGet(key); }catch(e){ console.warn('Supabase read failed, falling back to localStorage', e); }
+  }
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  if(HAS_CLAUDE_STORAGE){
+    try{ await window.storage.set(key, value, false); return; }catch(e){}
+  }
+  if(HAS_SUPABASE){
+    try{ await supabaseSet(key, value); return; }catch(e){ console.warn('Supabase write failed, falling back to localStorage', e); }
+  }
+  try{ localStorage.setItem(key, value); }catch(e){}
+}
+
+function updateSyncBadge(){
+  const badge = document.getElementById('syncBadge');
+  if(!badge) return;
+  if(HAS_CLAUDE_STORAGE) badge.textContent = '';
+  else if(HAS_SUPABASE) badge.textContent = '🟢 Shared (Supabase)';
+  else badge.textContent = '🟡 Local only (this browser) — add Supabase keys to share';
+}
+
+async function loadStorage(){
+  try{
+    const v = await storageGet('colab_suppliers');
+    if(v) state.suppliers = JSON.parse(v);
+  }catch(e){}
+  try{
+    const v = await storageGet('colab_supplier_categories');
+    if(v) state.categories = JSON.parse(v);
+  }catch(e){}
+  try{
+    const v = await storageGet('colab_supplier_lang');
+    if(v) state.lang = v;
+  }catch(e){}
+  // migrate legacy single-category records
+  state.suppliers.forEach(s => {
+    if(!s.categories){
+      s.categories = s.category ? [s.category] : [];
+    }
+  });
+}
+async function saveSuppliers(){
+  await storageSet('colab_suppliers', JSON.stringify(state.suppliers));
+}
+async function saveCategories(){
+  await storageSet('colab_supplier_categories', JSON.stringify(state.categories));
+}
+async function saveLang(){
+  await storageSet('colab_supplier_lang', state.lang);
+}
+
+function applyTranslations(){
+  const app = document.getElementById('app');
+  app.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.getAttribute('data-t')); });
+  document.querySelectorAll('[data-t-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-t-ph')); });
+  document.querySelectorAll('.lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === state.lang));
+}
+
+function categoryOf(name){ return state.categories.find(c => c.name === name); }
+
+function renderStats(){
+  const total = state.suppliers.length;
+  const active = state.suppliers.filter(s => s.status === 'Active').length;
+  const topRated = state.suppliers.filter(s => (s.rating||0) >= 4).length;
+  const catCounts = {};
+  state.suppliers.forEach(s => (s.categories||[]).forEach(cn => { catCounts[cn] = (catCounts[cn]||0)+1; }));
+  const topCats = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">${esc(t('statTotal'))}</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">${esc(t('statActive'))}</div><div class="stat-value">${active}</div></div>
+    <div class="stat-card"><div class="stat-label">${esc(t('statTopRated'))}</div><div class="stat-value">${topRated}</div></div>
+    <div class="stat-card"><div class="stat-label">${esc(t('statTopCat'))}</div>
+      <div class="stat-chips">${topCats.map(([c,n])=>`<span class="chip">${esc(c)} · ${n}</span>`).join('') || '<span class="chip">—</span>'}</div>
+    </div>`;
+}
+
+function renderFilters(){
+  const cats = state.categories.map(c=>c.name);
+  const cities = [...new Set(state.suppliers.map(s=>s.city).filter(Boolean))];
+
+  document.getElementById('fCategory').innerHTML = `<option value="">${esc(t('allCategories'))}</option>` + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  document.getElementById('fStatus').innerHTML = `<option value="">${esc(t('allStatus'))}</option><option value="Active">${esc(t('statusActive'))}</option><option value="Inactive">${esc(t('statusInactive'))}</option>`;
+  document.getElementById('fTier').innerHTML = `<option value="">${esc(t('allTiers'))}</option>` + ['Preferred','Backup','New','Blacklisted'].map(tier=>`<option value="${tier}">${esc(t('tier'+tier))}</option>`).join('');
+  document.getElementById('fCity').innerHTML = `<option value="">${esc(t('allCities'))}</option>` + cities.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  document.getElementById('fRating').innerHTML = `<option value="">${esc(t('allRatings'))}</option>` + [5,4,3,2,1].map(r=>`<option value="${r}">${'★'.repeat(r)}</option>`).join('');
+  document.getElementById('fSort').innerHTML = `<option value="name">${esc(t('sortName'))}</option><option value="rating">${esc(t('sortRating'))}</option><option value="last">${esc(t('sortLast'))}</option>`;
+
+  document.getElementById('fCategory').value = state.filters.category;
+  document.getElementById('fStatus').value = state.filters.status;
+  document.getElementById('fTier').value = state.filters.tier;
+  document.getElementById('fCity').value = state.filters.city;
+  document.getElementById('fRating').value = state.filters.rating;
+  document.getElementById('fSort').value = state.filters.sort;
+  document.getElementById('fSearch').value = state.filters.search;
+}
+
+function filteredSuppliers(){
+  let list = state.suppliers.slice();
+  const f = state.filters;
+  if(f.search){
+    const q = f.search.toLowerCase();
+    list = list.filter(s => (s.name||'').toLowerCase().includes(q) || (s.tags||[]).join(' ').toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q) || (s.categories||[]).join(' ').toLowerCase().includes(q));
+  }
+  if(f.category) list = list.filter(s => (s.categories||[]).includes(f.category));
+  if(f.status) list = list.filter(s => s.status === f.status);
+  if(f.tier) list = list.filter(s => s.tier === f.tier);
+  if(f.city) list = list.filter(s => s.city === f.city);
+  if(f.rating) list = list.filter(s => (s.rating||0) >= parseInt(f.rating));
+  if(f.sort === 'name') list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(f.sort === 'rating') list.sort((a,b)=>(b.rating||0)-(a.rating||0));
+  if(f.sort === 'last') list.sort((a,b)=>(b.lastContacted||'').localeCompare(a.lastContacted||''));
+  return list;
+}
+
+function catBadgesHtml(categories){
+  return (categories||[]).map(cn => {
+    const cat = categoryOf(cn);
+    const color = cat ? cat.color : '#888888';
+    return `<span class="cat-badge" style="background:${color};color:${darkTextFor(color)}">${esc(cn)}</span>`;
+  }).join('');
+}
+
+function renderGrid(){
+  const list = filteredSuppliers();
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('emptyState');
+  if(list.length === 0){
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  grid.innerHTML = list.map(s => {
+    const initials = (s.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const logo = (s.photos && s.photos[0]) ? `<img class="card-logo" src="${esc(s.photos[0])}" onerror="this.style.display='none'">` : `<div class="card-logo-fallback">${esc(initials)}</div>`;
+    const tierColor = TIER_COLORS[s.tier] || 'var(--text-mute)';
+    const contact = (s.contacts && s.contacts[0]) || {};
+    const waLink = contact.whatsapp ? `https://wa.me/${contact.whatsapp.replace(/[^0-9]/g,'')}` : '';
+    return `<div class="card" data-id="${s.id}">
+      <span class="tier-badge" style="background:${tierColor};color:#0c0c0c">${esc(t('tier'+s.tier))}</span>
+      <div class="card-top">
+        ${logo}
+        <div>
+          <div class="card-name">${esc(s.name)}</div>
+          <div class="card-cats">${catBadgesHtml(s.categories)}</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        ${(s.tags||[]).slice(0,4).map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}
+      </div>
+      <div class="card-meta">
+        <span class="stars">${'★'.repeat(s.rating||0)}${'☆'.repeat(5-(s.rating||0))}</span>
+        <span>${esc(s.city||'')}</span>
+      </div>
+      <div class="card-actions">
+        ${waLink ? `<a class="icon-btn" href="${waLink}" target="_blank" onclick="event.stopPropagation()" aria-label="WhatsApp">💬</a>` : ''}
+        <button class="icon-btn" onclick="event.stopPropagation();openForm('${s.id}')" aria-label="${esc(t('edit'))}">✎</button>
+        <button class="icon-btn" onclick="event.stopPropagation();deleteSupplier('${s.id}')" aria-label="${esc(t('delete'))}">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => openDetail(card.dataset.id));
+  });
+}
+
+function openDetail(id){
+  const s = state.suppliers.find(x => x.id === id);
+  if(!s) return;
+  const tierColor = TIER_COLORS[s.tier] || 'var(--text-mute)';
+
+  const contactsHtml = (s.contacts||[]).map(c => {
+    const waLink = c.whatsapp ? `https://wa.me/${c.whatsapp.replace(/[^0-9]/g,'')}` : '';
+    return `<div class="contact-card">
+      <div class="name">${esc(c.name||'—')}</div>
+      <div class="role">${esc(c.role||'')}</div>
+      <div class="field-row"><span class="field-label">${esc(t('fContactPhone'))}</span><span class="field-val">${esc(c.phone||'—')}</span></div>
+      <div class="field-row"><span class="field-label">${esc(t('fContactEmail'))}</span><span class="field-val">${esc(c.email||'—')}</span></div>
+      <div class="contact-links">${waLink?`<a class="btn btn-sm" href="${waLink}" target="_blank">WhatsApp</a>`:''}${c.phone?`<a class="btn btn-sm" href="tel:${esc(c.phone)}">Call</a>`:''}</div>
+    </div>`;
+  }).join('') || `<div class="field-row"><span class="field-label">—</span></div>`;
+
+  const logHtml = (s.log||[]).slice().reverse().map(l => `<div class="log-entry"><div class="log-date">${esc(l.date)}</div>${esc(l.note)}</div>`).join('') || `<div class="field-row">—</div>`;
+
+  const row = (label, val) => val ? `<div class="field-row"><span class="field-label">${esc(label)}</span><span class="field-val">${esc(val)}</span></div>` : '';
+  const linkRow = (label, val) => val ? `<div class="field-row"><span class="field-label">${esc(label)}</span><span class="field-val"><a href="${esc(val)}" target="_blank" style="color:var(--soft-purple)">${esc(val)}</a></span></div>` : '';
+
+  const tierOptionsHtml = ['Preferred','Backup','New','Blacklisted'].map(tr=>`<option value="${tr}" ${s.tier===tr?'selected':''}>${esc(t('tier'+tr))}</option>`).join('');
+  const statusOptionsHtml = ['Active','Inactive'].map(st=>`<option value="${st}" ${s.status===st?'selected':''}>${esc(t('status'+st))}</option>`).join('');
+  const starPickerHtml = [1,2,3,4,5].map(n => `<span class="${(s.rating||0)>=n?'filled':''}" data-n="${n}">★</span>`).join('');
+
+  document.getElementById('detailPanel').innerHTML = `
+    <button class="panel-close" onclick="closePanels()">✕</button>
+    <h2>${esc(s.name)}</h2>
+    <div class="card-cats" style="margin-top:6px">${catBadgesHtml(s.categories)}</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-top:10px">${esc(s.description||'')}</p>
+    <div class="card-tags">${(s.tags||[]).map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div>
+
+    <div id="blacklistWarnBox">${s.tier==='Blacklisted' && s.blacklistReason ? `<div class="warn-box">🚫 ${esc(s.blacklistReason)}</div>` : ''}</div>
+
+    <div class="section">
+      <div class="section-title">🔎 ${esc(t('quickReview'))}</div>
+      <p style="font-size:11px;color:var(--text-mute);margin:0 0 8px">${esc(t('quickReviewHint'))}</p>
+      <div class="quick-edit-grid">
+        <div class="form-field">
+          <label>${esc(t('fTier'))}</label>
+          <select id="qe_tier" style="border-color:${tierColor}">${tierOptionsHtml}</select>
+        </div>
+        <div class="form-field">
+          <label>${esc(t('fStatus'))}</label>
+          <select id="qe_status">${statusOptionsHtml}</select>
+        </div>
+      </div>
+      <div class="form-field" style="margin-top:6px">
+        <label>${esc(t('fRating'))}</label>
+        <div class="star-picker" id="qe_stars">${starPickerHtml}</div>
+      </div>
+      <div class="form-field hidden" id="qe_blacklistWrap" style="margin-top:6px">
+        <label>${esc(t('fBlacklistReason'))}</label>
+        <input type="text" id="qe_blacklistReason" value="${esc(s.blacklistReason||'')}">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secContacts'))}</div>
+      ${contactsHtml}
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secFinancial'))}</div>
+      ${row(t('fPaymentTerms'), s.paymentTerms)}
+      ${row(t('fPaymentMethod'), s.paymentMethod)}
+      ${row(t('fBank'), s.bankInfo)}
+      ${row(t('fInvoiceHistory'), s.invoiceHistory)}
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secLogistics'))}</div>
+      ${row(t('fCity'), s.city)}
+      ${row(t('fDelivery'), s.delivery)}
+      ${row(t('fTurnaround'), s.turnaround)}
+      ${row(t('fMinQty'), s.minQty)}
+      ${row(t('fLanguages'), s.languages)}
+      ${row(t('fPriceRange'), s.priceRange)}
+      ${row(t('fLastQuoted'), s.lastQuoted)}
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secMedia'))}</div>
+      ${row(t('fSocial'), s.social)}
+      ${linkRow(t('fWebsite'), s.website)}
+      ${linkRow(t('fPortfolio'), s.portfolio)}
+      ${(s.photos||[]).map(p => linkRow(t('fPhotos'), p)).join('')}
+      ${linkRow(t('fPriceList'), s.priceList)}
+      ${linkRow(t('fCatalog'), s.catalog)}
+      ${linkRow(t('fContract'), s.contract)}
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secHistory'))}</div>
+      ${row(t('fHowMet'), s.howMet)}
+      ${row(t('fProjects'), s.projects)}
+      ${row(t('fLastContacted'), s.lastContacted)}
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secLog'))}</div>
+      ${logHtml}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input type="text" id="newLogNote" placeholder="${esc(t('fNewLogNote'))}" style="flex:1">
+        <button class="btn btn-sm" onclick="addLogEntry('${s.id}')">${esc(t('addLogEntry'))}</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:20px">
+      <button class="btn" style="flex:1" onclick="openForm('${s.id}')">${esc(t('edit'))}</button>
+      <button class="btn btn-danger" style="flex:1" onclick="deleteSupplier('${s.id}')">${esc(t('delete'))}</button>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('formPanel').classList.remove('open');
+  document.getElementById('categoryPanel').classList.remove('open');
+
+  document.getElementById('qe_blacklistWrap').classList.toggle('hidden', s.tier !== 'Blacklisted');
+  document.getElementById('qe_tier').addEventListener('change', async (e) => {
+    s.tier = e.target.value;
+    document.getElementById('qe_blacklistWrap').classList.toggle('hidden', s.tier !== 'Blacklisted');
+    document.getElementById('blacklistWarnBox').innerHTML = (s.tier==='Blacklisted' && s.blacklistReason) ? `<div class="warn-box">🚫 ${esc(s.blacklistReason)}</div>` : '';
+    await saveSuppliers();
+    renderStats(); renderFilters(); renderGrid();
+  });
+  document.getElementById('qe_status').addEventListener('change', async (e) => {
+    s.status = e.target.value;
+    await saveSuppliers();
+    renderStats(); renderFilters(); renderGrid();
+  });
+  document.getElementById('qe_blacklistReason').addEventListener('change', async (e) => {
+    s.blacklistReason = e.target.value.trim();
+    document.getElementById('blacklistWarnBox').innerHTML = (s.tier==='Blacklisted' && s.blacklistReason) ? `<div class="warn-box">🚫 ${esc(s.blacklistReason)}</div>` : '';
+    await saveSuppliers();
+  });
+  document.querySelectorAll('#qe_stars span').forEach(star => {
+    star.addEventListener('click', async () => {
+      s.rating = parseInt(star.dataset.n);
+      document.querySelectorAll('#qe_stars span').forEach(st => st.classList.toggle('filled', parseInt(st.dataset.n) <= s.rating));
+      await saveSuppliers();
+      renderStats(); renderGrid();
+    });
+  });
+}
+
+async function addLogEntry(id){
+  const input = document.getElementById('newLogNote');
+  const note = input.value.trim();
+  if(!note) return;
+  const s = state.suppliers.find(x=>x.id===id);
+  if(!s) return;
+  s.log = s.log || [];
+  const d = new Date();
+  const dateStr = String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  s.log.push({date:dateStr, note});
+  await saveSuppliers();
+  openDetail(id);
+  renderGrid();
+}
+
+function closePanels(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('formPanel').classList.remove('open');
+  document.getElementById('categoryPanel').classList.remove('open');
+  editingId = null;
+}
+document.getElementById('overlay').addEventListener('click', closePanels);
+
+function emptyContact(){ return {name:'',role:'',phone:'',whatsapp:'',email:''}; }
+function emptySupplier(){
+  return { id: uid(), name:'', categories:[], tags:[], description:'', tier:'New', status:'Active', availability:'Available',
+    rating:0, review:'', wouldWorkAgain:'', blacklistReason:'',
+    contacts:[emptyContact()],
+    paymentTerms:'', paymentMethod:'', bankInfo:'', invoiceHistory:'',
+    city:'', delivery:'', turnaround:'', minQty:'', languages:'', priceRange:'', lastQuoted:'',
+    social:'', website:'', portfolio:'', photos:[], priceList:'', catalog:'', contract:'',
+    howMet:'', projects:'', lastContacted:'', log:[], createdAt: new Date().toISOString() };
+}
+
+function checkDuplicate(supplier){
+  return state.suppliers.some(s => s.id !== supplier.id && (
+    (s.name && supplier.name && s.name.trim().toLowerCase() === supplier.name.trim().toLowerCase()) ||
+    (s.contacts && supplier.contacts && s.contacts.some(c1 => supplier.contacts.some(c2 => c1.phone && c2.phone && c1.phone.replace(/\D/g,'') === c2.phone.replace(/\D/g,'') && c1.phone.replace(/\D/g,'').length > 5)))
+  ));
+}
+
+function openForm(id){
+  let s;
+  if(id){
+    s = state.suppliers.find(x=>x.id===id);
+    editingId = id;
+  } else {
+    s = emptySupplier();
+    editingId = null;
+  }
+  renderForm(s);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('formPanel').classList.add('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('categoryPanel').classList.remove('open');
+}
+
+function categoryChecklistHtml(selected){
+  const sel = selected || [];
+  return state.categories.map(c => `
+    <label class="cat-check-item" style="border-color:${c.color}">
+      <input type="checkbox" class="cat-check" value="${esc(c.name)}" ${sel.includes(c.name)?'checked':''}>
+      <span style="width:9px;height:9px;border-radius:50%;background:${c.color};display:inline-block"></span>
+      ${esc(c.name)}
+    </label>`).join('');
+}
+
+function renderForm(s){
+  const tierOptions = ['Preferred','Backup','New','Blacklisted'].map(tr=>`<option value="${tr}" ${s.tier===tr?'selected':''}>${esc(t('tier'+tr))}</option>`).join('');
+  const statusOptions = ['Active','Inactive'].map(st=>`<option value="${st}" ${s.status===st?'selected':''}>${esc(t('status'+st))}</option>`).join('');
+
+  const contactsHtml = (s.contacts||[emptyContact()]).map((c,i)=>`
+    <div class="contact-block" data-cindex="${i}">
+      <div class="form-grid">
+        <div class="form-field"><label>${esc(t('fContactName'))}</label><input type="text" class="c-name" value="${esc(c.name)}"></div>
+        <div class="form-field"><label>${esc(t('fContactRole'))}</label><input type="text" class="c-role" value="${esc(c.role)}"></div>
+        <div class="form-field"><label>${esc(t('fContactPhone'))}</label><input type="text" class="c-phone" value="${esc(c.phone)}"></div>
+        <div class="form-field"><label>${esc(t('fContactWhatsapp'))}</label><input type="text" class="c-whatsapp" value="${esc(c.whatsapp)}"></div>
+        <div class="form-field" style="grid-column:1/-1"><label>${esc(t('fContactEmail'))}</label><input type="text" class="c-email" value="${esc(c.email)}"></div>
+      </div>
+      ${(s.contacts.length>1)?`<button class="btn btn-sm btn-danger" onclick="removeContactBlock(${i})">${esc(t('removeContact'))}</button>`:''}
+    </div>`).join('');
+
+  document.getElementById('formPanel').innerHTML = `
+    <button class="panel-close" onclick="closePanels()">✕</button>
+    <h2>${editingId ? esc(t('edit')) : esc(t('addSupplier'))}</h2>
+
+    <div class="section">
+      <div class="section-title">🤖 ${esc(t('aiAutoFillLabel'))}</div>
+      <textarea id="aiPaste" rows="4" style="width:100%"></textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" id="btnAiFill">${esc(t('aiAutoFillBtn'))}</button>
+      <div id="aiFillLoading" class="ai-loading hidden">${esc(t('aiAutoFilling'))}</div>
+    </div>
+
+    <div id="dupWarning"></div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secIdentity'))}</div>
+      <div class="form-field"><label>${esc(t('fName'))}</label><input type="text" id="f_name" value="${esc(s.name)}"></div>
+      <div class="form-field">
+        <label>${esc(t('fCategories'))}</label>
+        <div class="cat-checklist" id="catChecklist">${categoryChecklistHtml(s.categories)}</div>
+        <button type="button" class="btn btn-sm" style="margin-top:6px" id="btnOpenCatManagerFromForm">${esc(t('manageCategories'))}</button>
+      </div>
+      <div class="form-field"><label>${esc(t('fTags'))}</label><input type="text" id="f_tags" value="${esc((s.tags||[]).join(', '))}"></div>
+      <div class="form-field"><label>${esc(t('fDescription'))}</label><textarea id="f_description" rows="2">${esc(s.description)}</textarea></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secStatus'))}</div>
+      <div class="form-grid">
+        <div class="form-field"><label>${esc(t('fTier'))}</label><select id="f_tier">${tierOptions}</select></div>
+        <div class="form-field"><label>${esc(t('fStatus'))}</label><select id="f_status">${statusOptions}</select></div>
+        <div class="form-field"><label>${esc(t('fAvailability'))}</label><input type="text" id="f_availability" value="${esc(s.availability)}"></div>
+        <div class="form-field"><label>${esc(t('fRating'))}</label><input type="number" min="0" max="5" id="f_rating" value="${s.rating||0}"></div>
+        <div class="form-field"><label>${esc(t('fWorkAgain'))}</label><input type="text" id="f_wouldWorkAgain" value="${esc(s.wouldWorkAgain)}"></div>
+        <div class="form-field"><label>${esc(t('fBlacklistReason'))}</label><input type="text" id="f_blacklistReason" value="${esc(s.blacklistReason)}"></div>
+      </div>
+      <div class="form-field"><label>${esc(t('fReview'))}</label><textarea id="f_review" rows="2">${esc(s.review)}</textarea></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secContacts'))}</div>
+      <div id="contactsWrap">${contactsHtml}</div>
+      <button class="btn btn-sm" id="btnAddContact">${esc(t('addContact'))}</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secFinancial'))}</div>
+      <div class="form-grid">
+        <div class="form-field"><label>${esc(t('fPaymentTerms'))}</label><input type="text" id="f_paymentTerms" value="${esc(s.paymentTerms)}"></div>
+        <div class="form-field"><label>${esc(t('fPaymentMethod'))}</label><input type="text" id="f_paymentMethod" value="${esc(s.paymentMethod)}"></div>
+        <div class="form-field"><label>${esc(t('fBank'))}</label><input type="text" id="f_bankInfo" value="${esc(s.bankInfo)}"></div>
+        <div class="form-field"><label>${esc(t('fInvoiceHistory'))}</label><input type="text" id="f_invoiceHistory" value="${esc(s.invoiceHistory)}"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secLogistics'))}</div>
+      <div class="form-grid">
+        <div class="form-field"><label>${esc(t('fCity'))}</label><input type="text" id="f_city" value="${esc(s.city)}"></div>
+        <div class="form-field"><label>${esc(t('fDelivery'))}</label><input type="text" id="f_delivery" value="${esc(s.delivery)}"></div>
+        <div class="form-field"><label>${esc(t('fTurnaround'))}</label><input type="text" id="f_turnaround" value="${esc(s.turnaround)}"></div>
+        <div class="form-field"><label>${esc(t('fMinQty'))}</label><input type="text" id="f_minQty" value="${esc(s.minQty)}"></div>
+        <div class="form-field"><label>${esc(t('fLanguages'))}</label><input type="text" id="f_languages" value="${esc(s.languages)}"></div>
+        <div class="form-field"><label>${esc(t('fPriceRange'))}</label><input type="text" id="f_priceRange" value="${esc(s.priceRange)}"></div>
+        <div class="form-field"><label>${esc(t('fLastQuoted'))}</label><input type="text" id="f_lastQuoted" value="${esc(s.lastQuoted)}"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secMedia'))}</div>
+      <div class="form-grid">
+        <div class="form-field"><label>${esc(t('fSocial'))}</label><input type="text" id="f_social" value="${esc(s.social)}"></div>
+        <div class="form-field"><label>${esc(t('fWebsite'))}</label><input type="text" id="f_website" value="${esc(s.website)}"></div>
+        <div class="form-field"><label>${esc(t('fPortfolio'))}</label><input type="text" id="f_portfolio" value="${esc(s.portfolio)}"></div>
+        <div class="form-field"><label>${esc(t('fPriceList'))}</label><input type="text" id="f_priceList" value="${esc(s.priceList)}"></div>
+        <div class="form-field"><label>${esc(t('fCatalog'))}</label><input type="text" id="f_catalog" value="${esc(s.catalog)}"></div>
+        <div class="form-field"><label>${esc(t('fContract'))}</label><input type="text" id="f_contract" value="${esc(s.contract)}"></div>
+      </div>
+      <div class="form-field"><label>${esc(t('fPhotos'))}</label><textarea id="f_photos" rows="2">${esc((s.photos||[]).join('\\n'))}</textarea></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">${esc(t('secHistory'))}</div>
+      <div class="form-grid">
+        <div class="form-field"><label>${esc(t('fHowMet'))}</label><input type="text" id="f_howMet" value="${esc(s.howMet)}"></div>
+        <div class="form-field"><label>${esc(t('fProjects'))}</label><input type="text" id="f_projects" value="${esc(s.projects)}"></div>
+        <div class="form-field"><label>${esc(t('fLastContacted'))}</label><input type="text" id="f_lastContacted" value="${esc(s.lastContacted)}"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:20px;position:sticky;bottom:0;background:var(--panel);padding-top:10px">
+      <button class="btn btn-primary" style="flex:1" id="btnSaveForm">${esc(t('save'))}</button>
+      <button class="btn" style="flex:1" onclick="closePanels()">${esc(t('cancel'))}</button>
+    </div>
+  `;
+
+  document.getElementById('btnAddContact').addEventListener('click', () => {
+    collectFormContacts(s);
+    collectFormCategories(s);
+    s.contacts.push(emptyContact());
+    renderForm(s);
+  });
+  document.getElementById('btnSaveForm').addEventListener('click', () => saveForm(s));
+  document.getElementById('btnAiFill').addEventListener('click', () => runAiAutoFill(s));
+  document.getElementById('btnOpenCatManagerFromForm').addEventListener('click', () => {
+    collectFormContacts(s);
+    collectFormCategories(s);
+    openCategoryManager(s);
+  });
+
+  window.__removeContactBlockRef = (i) => {
+    collectFormContacts(s);
+    collectFormCategories(s);
+    s.contacts.splice(i,1);
+    renderForm(s);
+  };
+}
+function removeContactBlock(i){ window.__removeContactBlockRef(i); }
+
+function collectFormContacts(s){
+  const blocks = document.querySelectorAll('#contactsWrap .contact-block');
+  if(blocks.length === 0) return;
+  s.contacts = Array.from(blocks).map(b => ({
+    name: b.querySelector('.c-name').value.trim(),
+    role: b.querySelector('.c-role').value.trim(),
+    phone: b.querySelector('.c-phone').value.trim(),
+    whatsapp: b.querySelector('.c-whatsapp').value.trim(),
+    email: b.querySelector('.c-email').value.trim(),
+  }));
+  if(s.contacts.length===0) s.contacts.push(emptyContact());
+}
+function collectFormCategories(s){
+  const boxes = document.querySelectorAll('#catChecklist .cat-check');
+  if(boxes.length === 0) return;
+  s.categories = Array.from(boxes).filter(b=>b.checked).map(b=>b.value);
+}
+
+async function saveForm(s){
+  collectFormContacts(s);
+  collectFormCategories(s);
+  s.name = document.getElementById('f_name').value.trim();
+  s.tags = document.getElementById('f_tags').value.split(',').map(x=>x.trim()).filter(Boolean);
+  s.description = document.getElementById('f_description').value.trim();
+  s.tier = document.getElementById('f_tier').value;
+  s.status = document.getElementById('f_status').value;
+  s.availability = document.getElementById('f_availability').value.trim();
+  s.rating = parseInt(document.getElementById('f_rating').value) || 0;
+  s.review = document.getElementById('f_review').value.trim();
+  s.wouldWorkAgain = document.getElementById('f_wouldWorkAgain').value.trim();
+  s.blacklistReason = document.getElementById('f_blacklistReason').value.trim();
+  s.paymentTerms = document.getElementById('f_paymentTerms').value.trim();
+  s.paymentMethod = document.getElementById('f_paymentMethod').value.trim();
+  s.bankInfo = document.getElementById('f_bankInfo').value.trim();
+  s.invoiceHistory = document.getElementById('f_invoiceHistory').value.trim();
+  s.city = document.getElementById('f_city').value.trim();
+  s.delivery = document.getElementById('f_delivery').value.trim();
+  s.turnaround = document.getElementById('f_turnaround').value.trim();
+  s.minQty = document.getElementById('f_minQty').value.trim();
+  s.languages = document.getElementById('f_languages').value.trim();
+  s.priceRange = document.getElementById('f_priceRange').value.trim();
+  s.lastQuoted = document.getElementById('f_lastQuoted').value.trim();
+  s.social = document.getElementById('f_social').value.trim();
+  s.website = document.getElementById('f_website').value.trim();
+  s.portfolio = document.getElementById('f_portfolio').value.trim();
+  s.priceList = document.getElementById('f_priceList').value.trim();
+  s.catalog = document.getElementById('f_catalog').value.trim();
+  s.contract = document.getElementById('f_contract').value.trim();
+  s.photos = document.getElementById('f_photos').value.split('\\n').map(x=>x.trim()).filter(Boolean);
+  s.howMet = document.getElementById('f_howMet').value.trim();
+  s.projects = document.getElementById('f_projects').value.trim();
+  s.lastContacted = document.getElementById('f_lastContacted').value.trim();
+
+  if(!s.name){ alert(t('fName') + ' ?'); return; }
+
+  if(checkDuplicate(s)){
+    const proceed = confirm(t('duplicateWarning'));
+    if(!proceed) return;
+  }
+
+  const idx = state.suppliers.findIndex(x=>x.id===s.id);
+  if(idx >= 0) state.suppliers[idx] = s; else state.suppliers.push(s);
+  await saveSuppliers();
+  renderStats(); renderFilters(); renderGrid();
+  closePanels();
+}
+
+async function deleteSupplier(id){
+  if(!confirm(t('confirmDelete'))) return;
+  state.suppliers = state.suppliers.filter(s=>s.id!==id);
+  await saveSuppliers();
+  closePanels();
+  renderStats(); renderFilters(); renderGrid();
+}
+
+/* ---------- Category manager ---------- */
+function openCategoryManager(returnToSupplier){
+  renderCategoryManager(returnToSupplier);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('categoryPanel').classList.add('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('formPanel').classList.remove('open');
+}
+
+function renderCategoryManager(returnToSupplier){
+  const groups = {};
+  state.categories.forEach(c => { (groups[c.group||'Other'] = groups[c.group||'Other'] || []).push(c); });
+
+  let rowsHtml = '';
+  Object.entries(groups).forEach(([group, cats]) => {
+    rowsHtml += `<div style="font-size:11px;color:var(--soft-purple);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px">${esc(group)}</div>`;
+    cats.forEach(c => {
+      const inUse = state.suppliers.filter(s => (s.categories||[]).includes(c.name)).length;
+      rowsHtml += `
+        <div class="cat-manage-row" data-name="${esc(c.name)}">
+          <input type="color" class="cm-color" value="${c.color}">
+          <input type="text" class="cm-name" value="${esc(c.name)}">
+          <span style="font-size:10px;color:var(--text-mute);white-space:nowrap">${inUse} ${esc(t('suppliers'))}</span>
+          <button class="btn btn-sm" onclick="saveCategoryEdit('${esc(c.name)}')">${esc(t('save'))}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteCategoryByName('${esc(c.name)}')">${esc(t('delete'))}</button>
+        </div>`;
+    });
+  });
+
+  document.getElementById('categoryPanel').innerHTML = `
+    <button class="panel-close" onclick="closeCategoryManager(${returnToSupplier?'true':'false'})">✕</button>
+    <h2>${esc(t('manageCategoriesTitle'))}</h2>
+    <div class="section">
+      ${rowsHtml}
+    </div>
+    <div class="section">
+      <div class="section-title">${esc(t('addCategoryBtn'))}</div>
+      <div class="cat-manage-row">
+        <input type="color" id="newCatColor" value="#B1A7FD">
+        <input type="text" id="newCatName" placeholder="${esc(t('categoryNamePh'))}">
+      </div>
+      <input type="text" id="newCatGroup" placeholder="${esc(t('categoryGroupPh'))}" style="width:100%;margin-top:6px">
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" id="btnAddCatFinal">${esc(t('addCategoryBtn'))}</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px">
+      <button class="btn" style="flex:1" onclick="closeCategoryManager(${returnToSupplier?'true':'false'})">${esc(t('close'))}</button>
+    </div>
+  `;
+
+  document.getElementById('btnAddCatFinal').addEventListener('click', async () => {
+    const name = document.getElementById('newCatName').value.trim();
+    const color = document.getElementById('newCatColor').value;
+    const group = document.getElementById('newCatGroup').value.trim() || 'Custom';
+    if(!name){ alert(t('categoryNameRequired')); return; }
+    if(state.categories.some(c=>c.name.toLowerCase()===name.toLowerCase())){ alert(name); return; }
+    state.categories.push({name, color, group});
+    await saveCategories();
+    renderFilters();
+    renderCategoryManager(returnToSupplier);
+  });
+
+  window.__catManagerReturnSupplier = returnToSupplier;
+}
+
+async function saveCategoryEdit(oldName){
+  const row = document.querySelector(`.cat-manage-row[data-name="${CSS.escape(oldName)}"]`);
+  if(!row) return;
+  const newName = row.querySelector('.cm-name').value.trim();
+  const newColor = row.querySelector('.cm-color').value;
+  if(!newName) return;
+  const cat = state.categories.find(c=>c.name===oldName);
+  if(!cat) return;
+  cat.color = newColor;
+  if(newName !== oldName){
+    if(state.categories.some(c=>c.name.toLowerCase()===newName.toLowerCase() && c!==cat)){ alert(newName); return; }
+    cat.name = newName;
+    state.suppliers.forEach(s => {
+      s.categories = (s.categories||[]).map(cn => cn===oldName ? newName : cn);
+    });
+    await saveSuppliers();
+  }
+  await saveCategories();
+  renderStats(); renderFilters(); renderGrid();
+  renderCategoryManager(window.__catManagerReturnSupplier);
+}
+
+async function deleteCategoryByName(name){
+  const inUse = state.suppliers.filter(s => (s.categories||[]).includes(name)).length;
+  const msg = inUse > 0 ? `${t('confirmDeleteCategory')} (${inUse} ${t('suppliers')})` : t('confirmDeleteCategory');
+  if(!confirm(msg)) return;
+  state.categories = state.categories.filter(c=>c.name!==name);
+  state.suppliers.forEach(s => { s.categories = (s.categories||[]).filter(cn=>cn!==name); });
+  await saveCategories();
+  await saveSuppliers();
+  renderStats(); renderFilters(); renderGrid();
+  renderCategoryManager(window.__catManagerReturnSupplier);
+}
+
+function closeCategoryManager(returnToSupplier){
+  document.getElementById('categoryPanel').classList.remove('open');
+  if(returnToSupplier && editingId !== undefined){
+    const s = state.suppliers.find(x=>x.id===editingId) || (window.__lastFormSupplier);
+  }
+  document.getElementById('overlay').classList.remove('open');
+  if(returnToSupplier){
+    document.getElementById('formPanel').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+  }
+}
+
+/* ---------- AI features ---------- */
+async function callClaude(systemPrompt, userPrompt){
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{role:"user", content: userPrompt}]
+    })
+  });
+  const data = await resp.json();
+  const text = (data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\\n');
+  return text;
+}
+
+async function runAiAutoFill(s){
+  const raw = document.getElementById('aiPaste').value.trim();
+  if(!raw) return;
+  const loading = document.getElementById('aiFillLoading');
+  loading.classList.remove('hidden');
+  try{
+    const categories = state.categories.map(c=>c.name).join(', ');
+    const sys = "You extract supplier/vendor information from raw pasted text and output ONLY a JSON object, no markdown fences, no preamble. Fields: name, categories (array of strings, pick closest matches from this list where possible: "+categories+", else invent short ones), tags (array of strings), description, city, availability, priceRange, languages, social, website, contactName, contactPhone, contactWhatsapp, contactEmail, howMet, notes. Use empty string or empty array for anything not mentioned. Respond with raw JSON only.";
+    const text = await callClaude(sys, raw);
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    if(parsed.name) document.getElementById('f_name').value = parsed.name;
+    if(parsed.categories && parsed.categories.length){
+      parsed.categories.forEach(cn => {
+        if(!state.categories.some(c=>c.name.toLowerCase()===String(cn).toLowerCase())){
+          state.categories.push({name:cn, color:'#B1A7FD', group:'Custom'});
+        }
+      });
+      await saveCategories();
+      document.getElementById('catChecklist').innerHTML = categoryChecklistHtml(parsed.categories);
+    }
+    if(parsed.tags) document.getElementById('f_tags').value = (parsed.tags||[]).join(', ');
+    if(parsed.description) document.getElementById('f_description').value = parsed.description;
+    if(parsed.city) document.getElementById('f_city').value = parsed.city;
+    if(parsed.availability) document.getElementById('f_availability').value = parsed.availability;
+    if(parsed.priceRange) document.getElementById('f_priceRange').value = parsed.priceRange;
+    if(parsed.languages) document.getElementById('f_languages').value = parsed.languages;
+    if(parsed.social) document.getElementById('f_social').value = parsed.social;
+    if(parsed.website) document.getElementById('f_website').value = parsed.website;
+    if(parsed.howMet) document.getElementById('f_howMet').value = parsed.howMet;
+    const firstBlock = document.querySelector('#contactsWrap .contact-block');
+    if(firstBlock){
+      if(parsed.contactName) firstBlock.querySelector('.c-name').value = parsed.contactName;
+      if(parsed.contactPhone) firstBlock.querySelector('.c-phone').value = parsed.contactPhone;
+      if(parsed.contactWhatsapp) firstBlock.querySelector('.c-whatsapp').value = parsed.contactWhatsapp;
+      if(parsed.contactEmail) firstBlock.querySelector('.c-email').value = parsed.contactEmail;
+    }
+  }catch(e){
+    alert('AI auto-fill failed: ' + e.message);
+  }
+  loading.classList.add('hidden');
+}
+
+async function runAiFind(){
+  const query = document.getElementById('aiQuery').value.trim();
+  if(!query) return;
+  const loading = document.getElementById('aiLoading');
+  const resultBox = document.getElementById('aiResult');
+  loading.classList.remove('hidden');
+  resultBox.classList.add('hidden');
+  try{
+    const compact = state.suppliers.map(s => ({
+      name:s.name, categories:s.categories, tags:s.tags, city:s.city, priceRange:s.priceRange,
+      availability:s.availability, rating:s.rating, tier:s.tier, status:s.status,
+      turnaround:s.turnaround, minQty:s.minQty, description:s.description
+    }));
+    const sys = "You are a supplier-matching assistant for an Algerian creative agency called Colab. Given a JSON list of suppliers and a need, recommend the best 1-3 matches with a short reason each, in the same language as the user's request. If nothing matches well, say so plainly. Be concise, plain text, no markdown headers.";
+    const userMsg = "Suppliers: " + JSON.stringify(compact) + "\\n\\nNeed: " + query;
+    const text = await callClaude(sys, userMsg);
+    resultBox.textContent = text;
+    resultBox.classList.remove('hidden');
+  }catch(e){
+    resultBox.textContent = 'Error: ' + e.message;
+    resultBox.classList.remove('hidden');
+  }
+  loading.classList.add('hidden');
+}
+
+/* ---------- CSV export/import ---------- */
+function exportCsv(){
+  const rows = state.suppliers.map(s => ({
+    name:s.name, categories:(s.categories||[]).join('|'), tags:(s.tags||[]).join('|'), description:s.description,
+    tier:s.tier, status:s.status, availability:s.availability, rating:s.rating, review:s.review, wouldWorkAgain:s.wouldWorkAgain,
+    blacklistReason:s.blacklistReason,
+    contacts: JSON.stringify(s.contacts||[]),
+    paymentTerms:s.paymentTerms, paymentMethod:s.paymentMethod, bankInfo:s.bankInfo, invoiceHistory:s.invoiceHistory,
+    city:s.city, delivery:s.delivery, turnaround:s.turnaround, minQty:s.minQty, languages:s.languages,
+    priceRange:s.priceRange, lastQuoted:s.lastQuoted,
+    social:s.social, website:s.website, portfolio:s.portfolio, photos:(s.photos||[]).join('|'),
+    priceList:s.priceList, catalog:s.catalog, contract:s.contract,
+    howMet:s.howMet, projects:s.projects, lastContacted:s.lastContacted,
+    log: JSON.stringify(s.log||[])
+  }));
+  const csv = Papa.unparse(rows);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'colab_suppliers.csv'; a.click();
+  URL.revokeObjectURL(url);
+
+  const catRows = state.categories.map(c=>({name:c.name, color:c.color, group:c.group}));
+  const catCsv = Papa.unparse(catRows);
+  const catBlob = new Blob([catCsv], {type:'text/csv;charset=utf-8;'});
+  const catUrl = URL.createObjectURL(catBlob);
+  const a2 = document.createElement('a');
+  a2.href = catUrl; a2.download = 'colab_categories.csv'; a2.click();
+  URL.revokeObjectURL(catUrl);
+}
+
+function importCsvFile(file){
+  Papa.parse(file, {
+    header:true, skipEmptyLines:true,
+    complete: async (results) => {
+      const isCategoryFile = results.meta.fields.includes('color') && results.meta.fields.includes('group') && results.meta.fields.includes('name') && !results.meta.fields.includes('contacts');
+      if(isCategoryFile){
+        const imported = results.data.map(row => ({name:row.name, color:row.color||'#B1A7FD', group:row.group||'Custom'}));
+        imported.forEach(c => { if(!state.categories.some(x=>x.name.toLowerCase()===c.name.toLowerCase())) state.categories.push(c); });
+        await saveCategories();
+        renderFilters();
+        alert('Imported ' + imported.length + ' categories.');
+        return;
+      }
+      const imported = results.data.map(row => {
+        let contacts = [];
+        let log = [];
+        try{ contacts = JSON.parse(row.contacts||'[]'); }catch(e){ contacts=[emptyContact()]; }
+        try{ log = JSON.parse(row.log||'[]'); }catch(e){ log=[]; }
+        const cats = (row.categories||row.category||'').split('|').map(x=>x.trim()).filter(Boolean);
+        cats.forEach(cn => { if(!state.categories.some(c=>c.name.toLowerCase()===cn.toLowerCase())) state.categories.push({name:cn, color:'#B1A7FD', group:'Custom'}); });
+        return {
+          id: uid(), name:row.name||'', categories:cats, tags:(row.tags||'').split('|').filter(Boolean),
+          description:row.description||'', tier:row.tier||'New', status:row.status||'Active', availability:row.availability||'',
+          rating: parseInt(row.rating)||0, review:row.review||'', wouldWorkAgain:row.wouldWorkAgain||'',
+          blacklistReason:row.blacklistReason||'', contacts: contacts.length?contacts:[emptyContact()],
+          paymentTerms:row.paymentTerms||'', paymentMethod:row.paymentMethod||'', bankInfo:row.bankInfo||'', invoiceHistory:row.invoiceHistory||'',
+          city:row.city||'', delivery:row.delivery||'', turnaround:row.turnaround||'', minQty:row.minQty||'', languages:row.languages||'',
+          priceRange:row.priceRange||'', lastQuoted:row.lastQuoted||'',
+          social:row.social||'', website:row.website||'', portfolio:row.portfolio||'', photos:(row.photos||'').split('|').filter(Boolean),
+          priceList:row.priceList||'', catalog:row.catalog||'', contract:row.contract||'',
+          howMet:row.howMet||'', projects:row.projects||'', lastContacted:row.lastContacted||'',
+          log, createdAt: new Date().toISOString()
+        };
+      });
+      state.suppliers = state.suppliers.concat(imported);
+      await saveSuppliers();
+      await saveCategories();
+      renderStats(); renderFilters(); renderGrid();
+      alert('Imported ' + imported.length + ' suppliers.');
+    }
+  });
+}
+
+/* ---------- Events ---------- */
+document.querySelectorAll('.lang-switch button').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    state.lang = btn.dataset.lang;
+    await saveLang();
+    applyTranslations();
+    renderStats(); renderFilters(); renderGrid();
+  });
+});
+document.getElementById('btnAdd').addEventListener('click', () => openForm(null));
+document.getElementById('btnManageCats').addEventListener('click', () => openCategoryManager(false));
+document.getElementById('btnExport').addEventListener('click', exportCsv);
+document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
+document.getElementById('fileImport').addEventListener('change', (e) => {
+  if(e.target.files[0]) importCsvFile(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('btnAiFind').addEventListener('click', runAiFind);
+document.getElementById('aiQuery').addEventListener('keydown', (e) => { if(e.key==='Enter') runAiFind(); });
+
+document.getElementById('fSearch').addEventListener('input', (e) => { state.filters.search = e.target.value; renderGrid(); });
+document.getElementById('fCategory').addEventListener('change', e => { state.filters.category = e.target.value; renderGrid(); });
+document.getElementById('fStatus').addEventListener('change', e => { state.filters.status = e.target.value; renderGrid(); });
+document.getElementById('fTier').addEventListener('change', e => { state.filters.tier = e.target.value; renderGrid(); });
+document.getElementById('fCity').addEventListener('change', e => { state.filters.city = e.target.value; renderGrid(); });
+document.getElementById('fRating').addEventListener('change', e => { state.filters.rating = e.target.value; renderGrid(); });
+document.getElementById('fSort').addEventListener('change', e => { state.filters.sort = e.target.value; renderGrid(); });
+
+/* ---------- Init ---------- */
+(async function init(){
+  await loadStorage();
+  applyTranslations();
+  updateSyncBadge();
+  renderStats();
+  renderFilters();
+  renderGrid();
+})();
+</script>
+</body>
+</html>
