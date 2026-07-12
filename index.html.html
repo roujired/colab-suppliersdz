@@ -12,7 +12,7 @@
   --orange-red:#FF3B3B;
   --soft-purple:#B1A7FD;
   --smooth-orange:#FFBA1F;
-  --bg:#140416;
+  --bg:#100310;
   --panel:#20082A;
   --panel2:#2A0E38;
   --border:#3D1B4D;
@@ -27,7 +27,19 @@
   font-family:'Onest',Arial,sans-serif;
 }
 *{box-sizing:border-box;}
-body{margin:0;background:var(--bg);color:var(--text);}
+html,body{margin:0;min-height:100%;}
+body{
+  color:var(--text);
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(196,0,122,0.35), transparent 40%),
+    radial-gradient(circle at 88% 15%, rgba(106,0,168,0.4), transparent 45%),
+    radial-gradient(circle at 25% 85%, rgba(177,167,253,0.16), transparent 45%),
+    radial-gradient(circle at 80% 90%, rgba(255,186,31,0.10), transparent 40%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 4px),
+    linear-gradient(160deg, #1B0722 0%, #100310 55%, #170514 100%);
+  background-attachment:fixed;
+}
 .app{max-width:1280px;margin:0 auto;padding:24px 20px 60px;}
 .app[dir="rtl"] .tabbar,.app[dir="rtl"] .contact-block{direction:rtl;}
 h1,h2,h3{font-weight:600;margin:0;}
@@ -41,7 +53,37 @@ button{cursor:pointer;}
 .btn-primary:hover{opacity:0.9;}
 .btn-danger{border-color:var(--orange-red);color:var(--orange-red);}
 .btn-sm{padding:5px 10px;font-size:12px;}
+.hidden{display:none !important;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
 
+/* ---------- Login screen ---------- */
+#loginScreen{
+  position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(196,0,122,0.45), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgba(106,0,168,0.5), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(255,186,31,0.12), transparent 40%),
+    linear-gradient(160deg, #1B0722 0%, #100310 60%, #170514 100%);
+  padding:20px;
+}
+.login-card{
+  width:100%;max-width:380px;background:rgba(32,8,42,0.75);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:20px;padding:34px 30px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.45);
+}
+.login-mark{width:56px;height:56px;border-radius:16px;background:var(--dark-purple);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;}
+.login-title{text-align:center;font-size:19px;font-weight:600;}
+.login-sub{text-align:center;font-size:12px;color:var(--text-dim);margin-top:4px;margin-bottom:26px;}
+.login-field{margin-bottom:14px;}
+.login-field label{font-size:11px;color:var(--text-dim);display:block;margin-bottom:5px;}
+.login-field input{width:100%;padding:11px 12px;font-size:14px;border-radius:10px;}
+.login-error{background:rgba(255,59,59,0.12);border:1px solid var(--orange-red);border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:14px;color:#ffb3b3;}
+.login-btn{width:100%;padding:12px;border-radius:10px;font-size:14px;margin-top:6px;}
+.login-foot{text-align:center;font-size:11px;color:var(--text-mute);margin-top:18px;}
+
+/* ---------- header ---------- */
 .header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
 .brand{display:flex;align-items:center;gap:10px;}
 .brand-mark{width:40px;height:40px;border-radius:10px;background:var(--dark-purple);display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid var(--border);}
@@ -52,9 +94,13 @@ button{cursor:pointer;}
 .lang-switch button{background:var(--panel2);border:none;padding:7px 10px;font-size:12px;border-inline-end:1px solid var(--border);}
 .lang-switch button:last-child{border-inline-end:none;}
 .lang-switch button.active{background:var(--deep-purple);color:#fff;}
+.user-chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 6px;font-size:12px;}
+.user-chip .avatar{width:22px;height:22px;border-radius:50%;background:var(--deep-purple);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.role-pill{font-size:9px;padding:1px 6px;border-radius:10px;background:var(--soft-purple);color:#2a0e38;font-weight:700;text-transform:uppercase;}
 
+/* ---------- stats ---------- */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.stat-card{background:rgba(32,8,42,0.7);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
 .stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;}
 .stat-value{font-size:24px;font-weight:600;margin-top:4px;}
 .stat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
@@ -71,12 +117,13 @@ button{cursor:pointer;}
 .filters select{min-width:120px;}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:border-color .15s;position:relative;}
+.card{background:rgba(32,8,42,0.7);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:border-color .15s;position:relative;}
 .card:hover{border-color:var(--soft-purple);}
 .card-top{display:flex;gap:10px;align-items:flex-start;}
 .card-logo{width:44px;height:44px;border-radius:10px;background:var(--panel2);flex-shrink:0;object-fit:cover;border:1px solid var(--border);}
 .card-logo-fallback{width:44px;height:44px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--soft-purple);}
 .card-name{font-size:15px;font-weight:600;}
+.card-owner{font-size:10px;color:var(--text-mute);margin-top:1px;}
 .card-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
 .cat-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
 .tier-badge{position:absolute;top:14px;inset-inline-end:14px;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600;}
@@ -92,7 +139,7 @@ button{cursor:pointer;}
 
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:50;display:none;}
 .overlay.open{display:block;}
-.panel{position:fixed;top:0;inset-inline-end:0;width:min(460px,92vw);height:100%;background:var(--panel);border-inline-start:1px solid var(--border);z-index:51;overflow-y:auto;transform:translateX(100%);transition:transform .2s;padding:20px;}
+.panel{position:fixed;top:0;inset-inline-end:0;width:min(460px,92vw);height:100%;background:#1c0725;border-inline-start:1px solid var(--border);z-index:51;overflow-y:auto;transform:translateX(100%);transition:transform .2s;padding:20px;}
 .app[dir="rtl"] .panel{transform:translateX(-100%);}
 .panel.open{transform:translateX(0);}
 .panel-close{position:absolute;top:16px;inset-inline-end:16px;background:none;border:none;font-size:20px;color:var(--text-dim);}
@@ -110,7 +157,6 @@ button{cursor:pointer;}
 .log-date{color:var(--text-dim);font-size:11px;}
 
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.form-grid.full{grid-template-columns:1fr;}
 .form-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
 .form-field label{font-size:11px;color:var(--text-dim);}
 .contact-block{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;}
@@ -123,19 +169,44 @@ button{cursor:pointer;}
 .cat-manage-row{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--panel2);}
 .cat-manage-row input[type="text"]{flex:1;}
 .cat-manage-row input[type="color"]{width:34px;height:30px;padding:2px;border-radius:6px;}
-.swatch{width:18px;height:18px;border-radius:5px;border:1px solid var(--border);flex-shrink:0;}
 
 .quick-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;}
 .star-picker{display:flex;gap:3px;font-size:18px;cursor:pointer;}
 .star-picker span{color:var(--text-mute);}
 .star-picker span.filled{color:var(--smooth-orange);}
 
-.hidden{display:none !important;}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+/* admin */
+.admin-user-row{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--panel2);flex-wrap:wrap;}
+.admin-user-row .uname{font-weight:600;font-size:13px;flex:1;min-width:100px;}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-inline-end:5px;}
+.status-dot.active{background:var(--tier-preferred);}
+.status-dot.deactivated{background:var(--text-mute);}
+.activity-row{font-size:12px;padding:7px 0;border-bottom:1px solid var(--border);}
+.activity-row .meta{color:var(--text-mute);font-size:10px;}
 </style>
 </head>
 <body>
-<div class="app" id="app" dir="ltr">
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-mark">🐦‍⬛</div>
+    <div class="login-title">Colab. Suppliers</div>
+    <div class="login-sub">Observe. Connect. Create.</div>
+    <div id="loginError" class="login-error hidden"></div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="loginUsername" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPassword" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary login-btn" id="btnLogin">Log in</button>
+    <div class="login-foot">Accounts are created by your admin. Contact them if you don't have one.</div>
+  </div>
+</div>
+
+<div class="app hidden" id="app" dir="ltr">
   <h1 class="sr-only">Colab. suppliers directory dashboard</h1>
 
   <div class="header">
@@ -144,7 +215,6 @@ button{cursor:pointer;}
       <div>
         <div class="brand-title" data-t="title">Suppliers Directory</div>
         <div class="brand-sub" data-t="subtitle">Colab. — Observe. Connect. Create.</div>
-        <div class="brand-sub" id="syncBadge" style="margin-top:2px"></div>
       </div>
     </div>
     <div class="header-actions">
@@ -153,11 +223,18 @@ button{cursor:pointer;}
         <button data-lang="fr">FR</button>
         <button data-lang="ar">AR</button>
       </div>
-      <button class="btn" id="btnManageCats" data-t="manageCategories">Manage categories</button>
+      <button class="btn hidden" id="btnManageCats" data-t="manageCategories">Manage categories</button>
+      <button class="btn hidden" id="btnAdminPanel">🛡️ Admin</button>
       <button class="btn" id="btnExport" data-t="exportCsv">Export CSV</button>
       <button class="btn" id="btnImport" data-t="importCsv">Import CSV</button>
       <input type="file" id="fileImport" accept=".csv" class="hidden">
-      <button class="btn btn-primary" id="btnAdd" data-t="addSupplier">+ Add supplier</button>
+      <button class="btn btn-primary hidden" id="btnAdd" data-t="addSupplier">+ Add supplier</button>
+      <div class="user-chip">
+        <span class="avatar" id="userAvatar">?</span>
+        <span id="userNameLabel">—</span>
+        <span class="role-pill" id="userRolePill">user</span>
+        <button class="btn btn-sm" id="btnLogout" style="padding:3px 8px">⏻</button>
+      </div>
     </div>
   </div>
 
@@ -180,6 +257,9 @@ button{cursor:pointer;}
     <select id="fCity"></select>
     <select id="fRating"></select>
     <select id="fSort"></select>
+    <label class="btn btn-sm hidden" id="viewAllWrap" style="display:flex;align-items:center;gap:6px">
+      <input type="checkbox" id="viewAllToggle" style="margin:0"> <span id="viewAllLabel">View all users' data</span>
+    </label>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -190,8 +270,15 @@ button{cursor:pointer;}
 <div class="panel" id="detailPanel"></div>
 <div class="panel" id="formPanel" style="width:min(560px,94vw)"></div>
 <div class="panel" id="categoryPanel" style="width:min(460px,94vw)"></div>
+<div class="panel" id="adminPanel" style="width:min(560px,94vw)"></div>
 
 <script>
+/* ================= CONFIG ================= */
+const SUPABASE_URL = "https://ukdicunwepcixwturobq.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZGljdW53ZXBjaXh3dHVyb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODUyNTUsImV4cCI6MjA5OTM2MTI1NX0.V9ZZJgXmI9fEbWaNcIUHrWlUz-Z4YpiowrwUTVjUp4s";
+const EMAIL_DOMAIN = "colab.internal";
+
+/* ================= i18n ================= */
 const I18N = {
   en: {
     title:"Suppliers Directory", subtitle:"Colab. — Observe. Connect. Create.",
@@ -227,9 +314,10 @@ const I18N = {
     yes:"Yes", no:"No",
     quickReview:"Quick review", quickReviewHint:"Update these instantly while reviewing — saved automatically.",
     manageCategoriesTitle:"Manage categories", addCategoryBtn:"+ Add category", categoryNamePh:"Category name",
-    categoryGroupPh:"Group (e.g. Printing & Production)", categoryInUse:"used by", suppliers:"supplier(s)",
+    categoryGroupPh:"Group (e.g. Printing & Production)", suppliers:"supplier(s)",
     confirmDeleteCategory:"Delete this category? It will be removed from any suppliers using it.",
     categoryNameRequired:"Enter a category name first.",
+    viewAll:"View all users' data",
   },
   fr: {
     title:"Répertoire fournisseurs", subtitle:"Colab. — Observe. Connect. Create.",
@@ -265,9 +353,10 @@ const I18N = {
     yes:"Oui", no:"Non",
     quickReview:"Révision rapide", quickReviewHint:"Modifiez ces champs instantanément pendant la révision — enregistré automatiquement.",
     manageCategoriesTitle:"Gérer les catégories", addCategoryBtn:"+ Ajouter une catégorie", categoryNamePh:"Nom de la catégorie",
-    categoryGroupPh:"Groupe (ex. Impression & Production)", categoryInUse:"utilisée par", suppliers:"fournisseur(s)",
+    categoryGroupPh:"Groupe (ex. Impression & Production)", suppliers:"fournisseur(s)",
     confirmDeleteCategory:"Supprimer cette catégorie ? Elle sera retirée de tous les fournisseurs concernés.",
     categoryNameRequired:"Entrez d'abord un nom de catégorie.",
+    viewAll:"Voir les données de tous les utilisateurs",
   },
   ar: {
     title:"دليل الموردين", subtitle:"Colab. — راقب. تواصل. أبدع.",
@@ -303,9 +392,10 @@ const I18N = {
     yes:"نعم", no:"لا",
     quickReview:"مراجعة سريعة", quickReviewHint:"عدّل هذه الحقول فورًا أثناء المراجعة — يُحفظ تلقائيًا.",
     manageCategoriesTitle:"إدارة الفئات", addCategoryBtn:"+ إضافة فئة", categoryNamePh:"اسم الفئة",
-    categoryGroupPh:"المجموعة (مثال: الطباعة والإنتاج)", categoryInUse:"مستخدمة من قبل", suppliers:"مورد",
+    categoryGroupPh:"المجموعة (مثال: الطباعة والإنتاج)", suppliers:"مورد",
     confirmDeleteCategory:"حذف هذه الفئة؟ ستتم إزالتها من كل الموردين الذين يستخدمونها.",
     categoryNameRequired:"أدخل اسم الفئة أولاً.",
+    viewAll:"عرض بيانات كل المستخدمين",
   }
 };
 
@@ -340,7 +430,11 @@ const DEFAULT_CATEGORIES = [
 
 const TIER_COLORS = {Preferred:"var(--tier-preferred)", Backup:"var(--tier-backup)", New:"var(--tier-new)", Blacklisted:"var(--tier-blacklisted)"};
 
-let state = { lang:"en", suppliers:[], categories:DEFAULT_CATEGORIES.slice(), filters:{search:"",category:"",status:"",tier:"",city:"",rating:"",sort:"name"} };
+let state = {
+  lang:"en", suppliers:[], categories:DEFAULT_CATEGORIES.slice(),
+  filters:{search:"",category:"",status:"",tier:"",city:"",rating:"",sort:"name"},
+  session:null, profile:null, viewAll:false, ownerMap:{}, usersCache:[],
+};
 let editingId = null;
 
 function t(key){ return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key; }
@@ -355,102 +449,205 @@ function darkTextFor(hex){
   }catch(e){ return '#3a2a40'; }
 }
 
-/* ---------- Storage adapter ----------
-   Tries, in order:
-   1. Claude.ai artifact storage (window.storage) — works only inside claude.ai
-   2. Supabase (shared, real-time-ish) — works once SUPABASE_URL/SUPABASE_ANON_KEY below are filled in
-   3. localStorage — per-browser fallback so the app never looks blank/broken
-   Fill these in after creating your Supabase project (Project Settings > API):
-*/
-const SUPABASE_URL = "https://ukdicunwepcixwturobq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZGljdW53ZXBjaXh3dHVyb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODUyNTUsImV4cCI6MjA5OTM2MTI1NX0.V9ZZJgXmI9fEbWaNcIUHrWlUz-Z4YpiowrwUTVjUp4s";
+/* ================= AUTH ================= */
+function saveSession(sess){ localStorage.setItem('colab_session', JSON.stringify(sess)); state.session = sess; }
+function loadSession(){ try{ const s = localStorage.getItem('colab_session'); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
+function clearSession(){ localStorage.removeItem('colab_session'); state.session = null; state.profile = null; }
 
-const HAS_CLAUDE_STORAGE = typeof window.storage !== 'undefined';
-const HAS_SUPABASE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
-
-async function supabaseGet(key){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/colab_kv?key=eq.${encodeURIComponent(key)}&select=value`, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+async function restSelect(path){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${state.session.access_token}` }
   });
-  if(!res.ok) throw new Error('Supabase GET failed: ' + res.status);
-  const rows = await res.json();
+  if(!res.ok) throw new Error('REST select failed: ' + res.status);
+  return res.json();
+}
+async function restUpsert(table, rows, onConflict){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${onConflict ? '?on_conflict='+onConflict : ''}`, {
+    method:'POST',
+    headers:{
+      apikey: SUPABASE_ANON_KEY, Authorization:`Bearer ${state.session.access_token}`,
+      'Content-Type':'application/json', Prefer:'resolution=merge-duplicates'
+    },
+    body: JSON.stringify(rows)
+  });
+  if(!res.ok) throw new Error('REST upsert failed: ' + res.status + ' ' + await res.text());
+  return true;
+}
+async function restInsert(table, row){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method:'POST',
+    headers:{ apikey: SUPABASE_ANON_KEY, Authorization:`Bearer ${state.session.access_token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify(row)
+  });
+  if(!res.ok) throw new Error('REST insert failed: ' + res.status);
+  return true;
+}
+async function callEdgeFunction(name, body){
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+    method:'POST',
+    headers:{ apikey: SUPABASE_ANON_KEY, Authorization:`Bearer ${state.session.access_token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+async function login(username, password){
+  const email = `${username.toLowerCase().trim()}@${EMAIL_DOMAIN}`;
+  const statusRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_login_status`, {
+    method:'POST',
+    headers:{ apikey: SUPABASE_ANON_KEY, 'Content-Type':'application/json' },
+    body: JSON.stringify({ p_username: username.toLowerCase().trim() })
+  });
+  const statusData = await statusRes.json();
+  const st = Array.isArray(statusData) ? statusData[0] : statusData;
+  if(st && st.locked) throw new Error('Account locked due to failed attempts. Try again in a few minutes.');
+  if(st && st.deactivated) throw new Error('This account has been deactivated.');
+
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method:'POST',
+    headers:{ apikey: SUPABASE_ANON_KEY, 'Content-Type':'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  await fetch(`${SUPABASE_URL}/rest/v1/rpc/record_login_attempt`, {
+    method:'POST',
+    headers:{ apikey: SUPABASE_ANON_KEY, 'Content-Type':'application/json' },
+    body: JSON.stringify({ p_username: username.toLowerCase().trim(), p_success: res.ok })
+  });
+  if(!res.ok) throw new Error('Incorrect username or password.');
+  saveSession(data);
+  await loadProfile();
+}
+
+async function loadProfile(){
+  const rows = await restSelect(`profiles?id=eq.${state.session.user.id}&select=*`);
+  state.profile = rows[0];
+}
+
+async function logout(){
+  clearSession();
+  location.reload();
+}
+
+/* ================= per-user data storage ================= */
+async function loadOwnKV(key){
+  const rows = await restSelect(`colab_kv?user_id=eq.${state.session.user.id}&key=eq.${encodeURIComponent(key)}&select=value`);
   return rows.length ? rows[0].value : null;
 }
-async function supabaseSet(key, value){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/colab_kv`, {
-    method: 'POST',
-    headers: {
-      apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates'
-    },
-    body: JSON.stringify({ key, value })
-  });
-  if(!res.ok) throw new Error('Supabase SET failed: ' + res.status);
+async function saveOwnKV(key, value){
+  await restUpsert('colab_kv', [{ user_id: state.session.user.id, key, value, updated_at: new Date().toISOString() }], 'user_id,key');
+}
+async function loadAllUsersKV(key){
+  return restSelect(`colab_kv?key=eq.${encodeURIComponent(key)}&select=user_id,value`);
 }
 
-async function storageGet(key){
-  if(HAS_CLAUDE_STORAGE){
-    try{ const r = await window.storage.get(key, false); return r ? r.value : null; }catch(e){ return null; }
-  }
-  if(HAS_SUPABASE){
-    try{ return await supabaseGet(key); }catch(e){ console.warn('Supabase read failed, falling back to localStorage', e); }
-  }
-  try{ return localStorage.getItem(key); }catch(e){ return null; }
-}
-async function storageSet(key, value){
-  if(HAS_CLAUDE_STORAGE){
-    try{ await window.storage.set(key, value, false); return; }catch(e){}
-  }
-  if(HAS_SUPABASE){
-    try{ await supabaseSet(key, value); return; }catch(e){ console.warn('Supabase write failed, falling back to localStorage', e); }
-  }
-  try{ localStorage.setItem(key, value); }catch(e){}
-}
-
-function updateSyncBadge(){
-  const badge = document.getElementById('syncBadge');
-  if(!badge) return;
-  if(HAS_CLAUDE_STORAGE) badge.textContent = '';
-  else if(HAS_SUPABASE) badge.textContent = '🟢 Shared (Supabase)';
-  else badge.textContent = '🟡 Local only (this browser) — add Supabase keys to share';
+async function logActivity(action, details){
+  try{
+    await restInsert('activity_log', { user_id: state.session.user.id, username: state.profile.username, action, details });
+  }catch(e){}
 }
 
 async function loadStorage(){
+  if(state.viewAll && state.profile.role === 'admin'){
+    const rows = await loadAllUsersKV('colab_suppliers');
+    let merged = [];
+    state.ownerMap = {};
+    const usersById = {};
+    state.usersCache.forEach(u => usersById[u.id] = u.username);
+    for(const row of rows){
+      let arr = [];
+      try{ arr = JSON.parse(row.value); }catch(e){ arr = []; }
+      arr.forEach(s => {
+        if(!s.categories) s.categories = s.category ? [s.category] : [];
+        state.ownerMap[s.id] = row.user_id;
+        s._ownerUsername = usersById[row.user_id] || row.user_id.slice(0,8);
+        merged.push(s);
+      });
+    }
+    state.suppliers = merged;
+    const catRows = await loadAllUsersKV('colab_supplier_categories');
+    let catMap = {};
+    DEFAULT_CATEGORIES.forEach(c => catMap[c.name] = c);
+    catRows.forEach(row => {
+      try{ JSON.parse(row.value).forEach(c => catMap[c.name] = c); }catch(e){}
+    });
+    state.categories = Object.values(catMap);
+  } else {
+    try{
+      const v = await loadOwnKV('colab_suppliers');
+      state.suppliers = v ? JSON.parse(v) : [];
+      state.suppliers.forEach(s => { if(!s.categories) s.categories = s.category ? [s.category] : []; });
+    }catch(e){ state.suppliers = []; }
+    try{
+      const v = await loadOwnKV('colab_supplier_categories');
+      state.categories = v ? JSON.parse(v) : DEFAULT_CATEGORIES.slice();
+    }catch(e){ state.categories = DEFAULT_CATEGORIES.slice(); }
+    state.ownerMap = {};
+  }
   try{
-    const v = await storageGet('colab_suppliers');
-    if(v) state.suppliers = JSON.parse(v);
-  }catch(e){}
-  try{
-    const v = await storageGet('colab_supplier_categories');
-    if(v) state.categories = JSON.parse(v);
-  }catch(e){}
-  try{
-    const v = await storageGet('colab_supplier_lang');
+    const v = await loadOwnKV('colab_supplier_lang');
     if(v) state.lang = v;
   }catch(e){}
-  // migrate legacy single-category records
-  state.suppliers.forEach(s => {
-    if(!s.categories){
-      s.categories = s.category ? [s.category] : [];
-    }
-  });
-}
-async function saveSuppliers(){
-  await storageSet('colab_suppliers', JSON.stringify(state.suppliers));
-}
-async function saveCategories(){
-  await storageSet('colab_supplier_categories', JSON.stringify(state.categories));
-}
-async function saveLang(){
-  await storageSet('colab_supplier_lang', state.lang);
 }
 
+async function saveSuppliers(supplier){
+  if(state.viewAll && supplier && state.ownerMap[supplier.id] && state.ownerMap[supplier.id] !== state.session.user.id){
+    const ownerId = state.ownerMap[supplier.id];
+    const rows = await restSelect(`colab_kv?user_id=eq.${ownerId}&key=eq.colab_suppliers&select=value`);
+    let arr = rows.length ? JSON.parse(rows[0].value) : [];
+    const idx = arr.findIndex(s => s.id === supplier.id);
+    const clean = {...supplier}; delete clean._ownerUsername;
+    if(idx >= 0) arr[idx] = clean; else arr.push(clean);
+    await restUpsert('colab_kv', [{ user_id: ownerId, key:'colab_suppliers', value: JSON.stringify(arr), updated_at: new Date().toISOString() }], 'user_id,key');
+    return;
+  }
+  const clean = state.suppliers
+    .filter(s => !state.viewAll || !state.ownerMap[s.id] || state.ownerMap[s.id] === state.session.user.id)
+    .map(s => { const c = {...s}; delete c._ownerUsername; return c; });
+  await saveOwnKV('colab_suppliers', JSON.stringify(clean));
+}
+async function deleteSupplierRemote(supplierId){
+  if(state.viewAll && state.ownerMap[supplierId] && state.ownerMap[supplierId] !== state.session.user.id){
+    const ownerId = state.ownerMap[supplierId];
+    const rows = await restSelect(`colab_kv?user_id=eq.${ownerId}&key=eq.colab_suppliers&select=value`);
+    let arr = rows.length ? JSON.parse(rows[0].value) : [];
+    arr = arr.filter(s => s.id !== supplierId);
+    await restUpsert('colab_kv', [{ user_id: ownerId, key:'colab_suppliers', value: JSON.stringify(arr), updated_at: new Date().toISOString() }], 'user_id,key');
+    return;
+  }
+  state.suppliers = state.suppliers.filter(s => s.id !== supplierId);
+  await saveSuppliers();
+}
+async function saveCategories(){
+  await saveOwnKV('colab_supplier_categories', JSON.stringify(state.categories));
+}
+async function saveLang(){
+  await saveOwnKV('colab_supplier_lang', state.lang);
+}
+
+/* ================= translations / UI helpers ================= */
 function applyTranslations(){
   const app = document.getElementById('app');
   app.dir = state.lang === 'ar' ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.getAttribute('data-t')); });
   document.querySelectorAll('[data-t-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-t-ph')); });
   document.querySelectorAll('.lang-switch button').forEach(b => b.classList.toggle('active', b.dataset.lang === state.lang));
+  document.getElementById('viewAllLabel').textContent = t('viewAll');
+}
+
+function applyRolePermissions(){
+  const role = state.profile.role;
+  const isViewer = role === 'viewer';
+  const isAdmin = role === 'admin';
+  document.getElementById('btnAdd').classList.toggle('hidden', isViewer);
+  document.getElementById('btnManageCats').classList.toggle('hidden', isViewer);
+  document.getElementById('btnAdminPanel').classList.toggle('hidden', !isAdmin);
+  document.getElementById('viewAllWrap').classList.toggle('hidden', !isAdmin);
+  document.getElementById('userAvatar').textContent = (state.profile.username||'?')[0].toUpperCase();
+  document.getElementById('userNameLabel').textContent = state.profile.username;
+  document.getElementById('userRolePill').textContent = role;
 }
 
 function categoryOf(name){ return state.categories.find(c => c.name === name); }
@@ -522,6 +719,7 @@ function renderGrid(){
   const list = filteredSuppliers();
   const grid = document.getElementById('grid');
   const empty = document.getElementById('emptyState');
+  const isViewer = state.profile.role === 'viewer';
   if(list.length === 0){
     grid.innerHTML = '';
     empty.classList.remove('hidden');
@@ -534,12 +732,14 @@ function renderGrid(){
     const tierColor = TIER_COLORS[s.tier] || 'var(--text-mute)';
     const contact = (s.contacts && s.contacts[0]) || {};
     const waLink = contact.whatsapp ? `https://wa.me/${contact.whatsapp.replace(/[^0-9]/g,'')}` : '';
+    const ownerLine = s._ownerUsername ? `<div class="card-owner">👤 ${esc(s._ownerUsername)}</div>` : '';
     return `<div class="card" data-id="${s.id}">
       <span class="tier-badge" style="background:${tierColor};color:#0c0c0c">${esc(t('tier'+s.tier))}</span>
       <div class="card-top">
         ${logo}
         <div>
           <div class="card-name">${esc(s.name)}</div>
+          ${ownerLine}
           <div class="card-cats">${catBadgesHtml(s.categories)}</div>
         </div>
       </div>
@@ -552,8 +752,8 @@ function renderGrid(){
       </div>
       <div class="card-actions">
         ${waLink ? `<a class="icon-btn" href="${waLink}" target="_blank" onclick="event.stopPropagation()" aria-label="WhatsApp">💬</a>` : ''}
-        <button class="icon-btn" onclick="event.stopPropagation();openForm('${s.id}')" aria-label="${esc(t('edit'))}">✎</button>
-        <button class="icon-btn" onclick="event.stopPropagation();deleteSupplier('${s.id}')" aria-label="${esc(t('delete'))}">🗑</button>
+        ${isViewer ? '' : `<button class="icon-btn" onclick="event.stopPropagation();openForm('${s.id}')" aria-label="${esc(t('edit'))}">✎</button>
+        <button class="icon-btn" onclick="event.stopPropagation();deleteSupplier('${s.id}')" aria-label="${esc(t('delete'))}">🗑</button>`}
       </div>
     </div>`;
   }).join('');
@@ -566,6 +766,7 @@ function renderGrid(){
 function openDetail(id){
   const s = state.suppliers.find(x => x.id === id);
   if(!s) return;
+  const isViewer = state.profile.role === 'viewer';
   const tierColor = TIER_COLORS[s.tier] || 'var(--text-mute)';
 
   const contactsHtml = (s.contacts||[]).map(c => {
@@ -591,12 +792,14 @@ function openDetail(id){
   document.getElementById('detailPanel').innerHTML = `
     <button class="panel-close" onclick="closePanels()">✕</button>
     <h2>${esc(s.name)}</h2>
+    ${s._ownerUsername ? `<div class="card-owner">👤 ${esc(s._ownerUsername)}</div>` : ''}
     <div class="card-cats" style="margin-top:6px">${catBadgesHtml(s.categories)}</div>
     <p style="font-size:13px;color:var(--text-dim);margin-top:10px">${esc(s.description||'')}</p>
     <div class="card-tags">${(s.tags||[]).map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div>
 
     <div id="blacklistWarnBox">${s.tier==='Blacklisted' && s.blacklistReason ? `<div class="warn-box">🚫 ${esc(s.blacklistReason)}</div>` : ''}</div>
 
+    ${isViewer ? '' : `
     <div class="section">
       <div class="section-title">🔎 ${esc(t('quickReview'))}</div>
       <p style="font-size:11px;color:var(--text-mute);margin:0 0 8px">${esc(t('quickReviewHint'))}</p>
@@ -618,7 +821,7 @@ function openDetail(id){
         <label>${esc(t('fBlacklistReason'))}</label>
         <input type="text" id="qe_blacklistReason" value="${esc(s.blacklistReason||'')}">
       </div>
-    </div>
+    </div>`}
 
     <div class="section">
       <div class="section-title">${esc(t('secContacts'))}</div>
@@ -665,45 +868,51 @@ function openDetail(id){
     <div class="section">
       <div class="section-title">${esc(t('secLog'))}</div>
       ${logHtml}
-      <div style="display:flex;gap:6px;margin-top:8px">
+      ${isViewer ? '' : `<div style="display:flex;gap:6px;margin-top:8px">
         <input type="text" id="newLogNote" placeholder="${esc(t('fNewLogNote'))}" style="flex:1">
         <button class="btn btn-sm" onclick="addLogEntry('${s.id}')">${esc(t('addLogEntry'))}</button>
-      </div>
+      </div>`}
     </div>
 
-    <div style="display:flex;gap:8px;margin-top:20px">
+    ${isViewer ? '' : `<div style="display:flex;gap:8px;margin-top:20px">
       <button class="btn" style="flex:1" onclick="openForm('${s.id}')">${esc(t('edit'))}</button>
       <button class="btn btn-danger" style="flex:1" onclick="deleteSupplier('${s.id}')">${esc(t('delete'))}</button>
-    </div>
+    </div>`}
   `;
   document.getElementById('overlay').classList.add('open');
   document.getElementById('detailPanel').classList.add('open');
   document.getElementById('formPanel').classList.remove('open');
   document.getElementById('categoryPanel').classList.remove('open');
+  document.getElementById('adminPanel').classList.remove('open');
+
+  if(isViewer) return;
 
   document.getElementById('qe_blacklistWrap').classList.toggle('hidden', s.tier !== 'Blacklisted');
   document.getElementById('qe_tier').addEventListener('change', async (e) => {
     s.tier = e.target.value;
     document.getElementById('qe_blacklistWrap').classList.toggle('hidden', s.tier !== 'Blacklisted');
     document.getElementById('blacklistWarnBox').innerHTML = (s.tier==='Blacklisted' && s.blacklistReason) ? `<div class="warn-box">🚫 ${esc(s.blacklistReason)}</div>` : '';
-    await saveSuppliers();
+    await saveSuppliers(s);
+    logActivity('quick_edit_tier', `${s.name} → ${s.tier}`);
     renderStats(); renderFilters(); renderGrid();
   });
   document.getElementById('qe_status').addEventListener('change', async (e) => {
     s.status = e.target.value;
-    await saveSuppliers();
+    await saveSuppliers(s);
+    logActivity('quick_edit_status', `${s.name} → ${s.status}`);
     renderStats(); renderFilters(); renderGrid();
   });
   document.getElementById('qe_blacklistReason').addEventListener('change', async (e) => {
     s.blacklistReason = e.target.value.trim();
     document.getElementById('blacklistWarnBox').innerHTML = (s.tier==='Blacklisted' && s.blacklistReason) ? `<div class="warn-box">🚫 ${esc(s.blacklistReason)}</div>` : '';
-    await saveSuppliers();
+    await saveSuppliers(s);
   });
   document.querySelectorAll('#qe_stars span').forEach(star => {
     star.addEventListener('click', async () => {
       s.rating = parseInt(star.dataset.n);
       document.querySelectorAll('#qe_stars span').forEach(st => st.classList.toggle('filled', parseInt(st.dataset.n) <= s.rating));
-      await saveSuppliers();
+      await saveSuppliers(s);
+      logActivity('quick_edit_rating', `${s.name} → ${s.rating}★`);
       renderStats(); renderGrid();
     });
   });
@@ -719,7 +928,7 @@ async function addLogEntry(id){
   const d = new Date();
   const dateStr = String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
   s.log.push({date:dateStr, note});
-  await saveSuppliers();
+  await saveSuppliers(s);
   openDetail(id);
   renderGrid();
 }
@@ -729,6 +938,7 @@ function closePanels(){
   document.getElementById('detailPanel').classList.remove('open');
   document.getElementById('formPanel').classList.remove('open');
   document.getElementById('categoryPanel').classList.remove('open');
+  document.getElementById('adminPanel').classList.remove('open');
   editingId = null;
 }
 document.getElementById('overlay').addEventListener('click', closePanels);
@@ -765,6 +975,7 @@ function openForm(id){
   document.getElementById('formPanel').classList.add('open');
   document.getElementById('detailPanel').classList.remove('open');
   document.getElementById('categoryPanel').classList.remove('open');
+  document.getElementById('adminPanel').classList.remove('open');
 }
 
 function categoryChecklistHtml(selected){
@@ -882,7 +1093,7 @@ function renderForm(s){
       </div>
     </div>
 
-    <div style="display:flex;gap:8px;margin-top:20px;position:sticky;bottom:0;background:var(--panel);padding-top:10px">
+    <div style="display:flex;gap:8px;margin-top:20px;position:sticky;bottom:0;background:#1c0725;padding-top:10px">
       <button class="btn btn-primary" style="flex:1" id="btnSaveForm">${esc(t('save'))}</button>
       <button class="btn" style="flex:1" onclick="closePanels()">${esc(t('cancel'))}</button>
     </div>
@@ -932,6 +1143,7 @@ function collectFormCategories(s){
 async function saveForm(s){
   collectFormContacts(s);
   collectFormCategories(s);
+  const isNew = !editingId;
   s.name = document.getElementById('f_name').value.trim();
   s.tags = document.getElementById('f_tags').value.split(',').map(x=>x.trim()).filter(Boolean);
   s.description = document.getElementById('f_description').value.trim();
@@ -971,28 +1183,32 @@ async function saveForm(s){
     if(!proceed) return;
   }
 
+  if(isNew) state.ownerMap[s.id] = state.session.user.id;
   const idx = state.suppliers.findIndex(x=>x.id===s.id);
   if(idx >= 0) state.suppliers[idx] = s; else state.suppliers.push(s);
-  await saveSuppliers();
+  await saveSuppliers(s);
+  logActivity(isNew ? 'add_supplier' : 'edit_supplier', s.name);
   renderStats(); renderFilters(); renderGrid();
   closePanels();
 }
 
 async function deleteSupplier(id){
   if(!confirm(t('confirmDelete'))) return;
-  state.suppliers = state.suppliers.filter(s=>s.id!==id);
-  await saveSuppliers();
+  const s = state.suppliers.find(x=>x.id===id);
+  await deleteSupplierRemote(id);
   closePanels();
+  logActivity('delete_supplier', s ? s.name : id);
   renderStats(); renderFilters(); renderGrid();
 }
 
-/* ---------- Category manager ---------- */
+/* ================= category manager ================= */
 function openCategoryManager(returnToSupplier){
   renderCategoryManager(returnToSupplier);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('categoryPanel').classList.add('open');
   document.getElementById('detailPanel').classList.remove('open');
   document.getElementById('formPanel').classList.remove('open');
+  document.getElementById('adminPanel').classList.remove('open');
 }
 
 function renderCategoryManager(returnToSupplier){
@@ -1086,9 +1302,6 @@ async function deleteCategoryByName(name){
 
 function closeCategoryManager(returnToSupplier){
   document.getElementById('categoryPanel').classList.remove('open');
-  if(returnToSupplier && editingId !== undefined){
-    const s = state.suppliers.find(x=>x.id===editingId) || (window.__lastFormSupplier);
-  }
   document.getElementById('overlay').classList.remove('open');
   if(returnToSupplier){
     document.getElementById('formPanel').classList.add('open');
@@ -1096,7 +1309,106 @@ function closeCategoryManager(returnToSupplier){
   }
 }
 
-/* ---------- AI features ---------- */
+/* ================= Admin panel ================= */
+async function openAdminPanel(){
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('adminPanel').classList.add('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('formPanel').classList.remove('open');
+  document.getElementById('categoryPanel').classList.remove('open');
+  await renderAdminPanel('users');
+}
+
+async function renderAdminPanel(tab){
+  document.getElementById('adminPanel').innerHTML = `
+    <button class="panel-close" onclick="closePanels()">✕</button>
+    <h2>🛡️ Admin panel</h2>
+    <div style="display:flex;gap:6px;margin-top:16px">
+      <button class="btn btn-sm ${tab==='users'?'btn-primary':''}" onclick="renderAdminPanel('users')">Users</button>
+      <button class="btn btn-sm ${tab==='activity'?'btn-primary':''}" onclick="renderAdminPanel('activity')">Activity log</button>
+    </div>
+    <div id="adminTabContent" class="section">Loading...</div>
+  `;
+  const content = document.getElementById('adminTabContent');
+  if(tab === 'users'){
+    try{
+      const data = await callEdgeFunction('admin-users', { action: 'list_users' });
+      state.usersCache = data.users;
+      content.innerHTML = `
+        ${data.users.map(u => `
+          <div class="admin-user-row" data-uid="${u.id}">
+            <span class="status-dot ${u.status}"></span>
+            <span class="uname">${esc(u.username)} <span class="role-pill" style="margin-inline-start:4px">${esc(u.role)}</span></span>
+            <span style="font-size:10px;color:var(--text-mute)">${u.last_active ? new Date(u.last_active).toLocaleString() : 'never logged in'}</span>
+            ${u.role === 'admin' ? '' : `
+              <button class="btn btn-sm" onclick="adminToggleUser('${u.id}','${u.status}')">${u.status==='active'?'Deactivate':'Reactivate'}</button>
+              <button class="btn btn-sm" onclick="adminResetPassword('${u.id}','${esc(u.username)}')">Reset pw</button>
+              <button class="btn btn-sm btn-danger" onclick="adminDeleteUser('${u.id}','${esc(u.username)}')">Delete</button>
+            `}
+          </div>`).join('')}
+        <div class="section">
+          <div class="section-title">+ Create user</div>
+          <div class="form-grid">
+            <div class="form-field"><label>Username</label><input type="text" id="newUserName"></div>
+            <div class="form-field"><label>Password</label><input type="text" id="newUserPass"></div>
+          </div>
+          <div class="form-field">
+            <label>Role</label>
+            <select id="newUserRole">
+              <option value="user">User</option>
+              <option value="viewer">Viewer (read-only)</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btnCreateUser">Create account</button>
+        </div>
+      `;
+      document.getElementById('btnCreateUser').addEventListener('click', adminCreateUser);
+    }catch(e){
+      content.innerHTML = `<div class="warn-box">${esc(e.message)}</div>`;
+    }
+  } else {
+    try{
+      const rows = await restSelect('activity_log?select=*&order=created_at.desc&limit=100');
+      content.innerHTML = rows.map(r => `
+        <div class="activity-row">
+          <strong>${esc(r.username||'?')}</strong> — ${esc(r.action)} ${r.details?('· '+esc(r.details)):''}
+          <div class="meta">${new Date(r.created_at).toLocaleString()}</div>
+        </div>`).join('') || '<div class="field-row">No activity yet.</div>';
+    }catch(e){
+      content.innerHTML = `<div class="warn-box">${esc(e.message)}</div>`;
+    }
+  }
+}
+
+async function adminCreateUser(){
+  const username = document.getElementById('newUserName').value.trim();
+  const password = document.getElementById('newUserPass').value;
+  const role = document.getElementById('newUserRole').value;
+  if(!username || !password || password.length < 6){ alert('Username + password (6+ chars) required.'); return; }
+  try{
+    await callEdgeFunction('admin-users', { action:'create_user', username, password, role });
+    renderAdminPanel('users');
+  }catch(e){ alert(e.message); }
+}
+async function adminToggleUser(id, currentStatus){
+  const action = currentStatus === 'active' ? 'deactivate_user' : 'reactivate_user';
+  try{ await callEdgeFunction('admin-users', { action, user_id:id }); renderAdminPanel('users'); }
+  catch(e){ alert(e.message); }
+}
+async function adminResetPassword(id, username){
+  const pw = prompt(`New password for ${username} (min 6 chars):`);
+  if(!pw) return;
+  try{ await callEdgeFunction('admin-users', { action:'reset_password', user_id:id, new_password: pw }); alert('Password reset.'); }
+  catch(e){ alert(e.message); }
+}
+async function adminDeleteUser(id, username){
+  if(!confirm(`Permanently delete ${username} and all their data? This cannot be undone.`)) return;
+  try{ await callEdgeFunction('admin-users', { action:'delete_user', user_id:id }); renderAdminPanel('users'); }
+  catch(e){ alert(e.message); }
+}
+
+/* ================= AI features ================= */
 async function callClaude(systemPrompt, userPrompt){
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -1181,9 +1493,10 @@ async function runAiFind(){
   loading.classList.add('hidden');
 }
 
-/* ---------- CSV export/import ---------- */
+/* ================= CSV export/import ================= */
 function exportCsv(){
   const rows = state.suppliers.map(s => ({
+    owner: s._ownerUsername || state.profile.username,
     name:s.name, categories:(s.categories||[]).join('|'), tags:(s.tags||[]).join('|'), description:s.description,
     tier:s.tier, status:s.status, availability:s.availability, rating:s.rating, review:s.review, wouldWorkAgain:s.wouldWorkAgain,
     blacklistReason:s.blacklistReason,
@@ -1202,29 +1515,12 @@ function exportCsv(){
   const a = document.createElement('a');
   a.href = url; a.download = 'colab_suppliers.csv'; a.click();
   URL.revokeObjectURL(url);
-
-  const catRows = state.categories.map(c=>({name:c.name, color:c.color, group:c.group}));
-  const catCsv = Papa.unparse(catRows);
-  const catBlob = new Blob([catCsv], {type:'text/csv;charset=utf-8;'});
-  const catUrl = URL.createObjectURL(catBlob);
-  const a2 = document.createElement('a');
-  a2.href = catUrl; a2.download = 'colab_categories.csv'; a2.click();
-  URL.revokeObjectURL(catUrl);
 }
 
 function importCsvFile(file){
   Papa.parse(file, {
     header:true, skipEmptyLines:true,
     complete: async (results) => {
-      const isCategoryFile = results.meta.fields.includes('color') && results.meta.fields.includes('group') && results.meta.fields.includes('name') && !results.meta.fields.includes('contacts');
-      if(isCategoryFile){
-        const imported = results.data.map(row => ({name:row.name, color:row.color||'#B1A7FD', group:row.group||'Custom'}));
-        imported.forEach(c => { if(!state.categories.some(x=>x.name.toLowerCase()===c.name.toLowerCase())) state.categories.push(c); });
-        await saveCategories();
-        renderFilters();
-        alert('Imported ' + imported.length + ' categories.');
-        return;
-      }
       const imported = results.data.map(row => {
         let contacts = [];
         let log = [];
@@ -1255,7 +1551,7 @@ function importCsvFile(file){
   });
 }
 
-/* ---------- Events ---------- */
+/* ================= Events ================= */
 document.querySelectorAll('.lang-switch button').forEach(btn => {
   btn.addEventListener('click', async () => {
     state.lang = btn.dataset.lang;
@@ -1266,6 +1562,7 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
 });
 document.getElementById('btnAdd').addEventListener('click', () => openForm(null));
 document.getElementById('btnManageCats').addEventListener('click', () => openCategoryManager(false));
+document.getElementById('btnAdminPanel').addEventListener('click', () => openAdminPanel());
 document.getElementById('btnExport').addEventListener('click', exportCsv);
 document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
 document.getElementById('fileImport').addEventListener('change', (e) => {
@@ -1274,6 +1571,7 @@ document.getElementById('fileImport').addEventListener('change', (e) => {
 });
 document.getElementById('btnAiFind').addEventListener('click', runAiFind);
 document.getElementById('aiQuery').addEventListener('keydown', (e) => { if(e.key==='Enter') runAiFind(); });
+document.getElementById('btnLogout').addEventListener('click', logout);
 
 document.getElementById('fSearch').addEventListener('input', (e) => { state.filters.search = e.target.value; renderGrid(); });
 document.getElementById('fCategory').addEventListener('change', e => { state.filters.category = e.target.value; renderGrid(); });
@@ -1282,15 +1580,58 @@ document.getElementById('fTier').addEventListener('change', e => { state.filters
 document.getElementById('fCity').addEventListener('change', e => { state.filters.city = e.target.value; renderGrid(); });
 document.getElementById('fRating').addEventListener('change', e => { state.filters.rating = e.target.value; renderGrid(); });
 document.getElementById('fSort').addEventListener('change', e => { state.filters.sort = e.target.value; renderGrid(); });
+document.getElementById('viewAllToggle').addEventListener('change', async (e) => {
+  state.viewAll = e.target.checked;
+  if(state.viewAll){
+    try{ const data = await callEdgeFunction('admin-users', { action:'list_users' }); state.usersCache = data.users; }catch(err){}
+  }
+  await loadStorage();
+  renderStats(); renderFilters(); renderGrid();
+});
 
-/* ---------- Init ---------- */
-(async function init(){
+document.getElementById('btnLogin').addEventListener('click', doLogin);
+document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+async function doLogin(){
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errBox = document.getElementById('loginError');
+  errBox.classList.add('hidden');
+  if(!username || !password) return;
+  try{
+    await login(username, password);
+    await boot();
+  }catch(e){
+    errBox.textContent = e.message;
+    errBox.classList.remove('hidden');
+  }
+}
+
+/* ================= Boot ================= */
+async function boot(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  applyRolePermissions();
   await loadStorage();
   applyTranslations();
-  updateSyncBadge();
   renderStats();
   renderFilters();
   renderGrid();
+}
+
+(async function init(){
+  const sess = loadSession();
+  if(sess){
+    state.session = sess;
+    try{
+      await loadProfile();
+      await boot();
+      return;
+    }catch(e){
+      clearSession();
+    }
+  }
+  document.getElementById('loginScreen').classList.remove('hidden');
 })();
 </script>
 </body>
