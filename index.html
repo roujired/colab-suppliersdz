@@ -1410,19 +1410,8 @@ async function adminDeleteUser(id, username){
 
 /* ================= AI features ================= */
 async function callClaude(systemPrompt, userPrompt){
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages: [{role:"user", content: userPrompt}]
-    })
-  });
-  const data = await resp.json();
-  const text = (data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\\n');
-  return text;
+  const data = await callEdgeFunction('ai-proxy', { system: systemPrompt, prompt: userPrompt });
+  return data.text || '';
 }
 
 async function runAiAutoFill(s){
