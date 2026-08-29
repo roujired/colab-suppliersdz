@@ -183,6 +183,29 @@ button{cursor:pointer;}
 .status-dot.deactivated{background:var(--text-mute);}
 .activity-row{font-size:12px;padding:7px 0;border-bottom:1px solid var(--border);}
 .activity-row .meta{color:var(--text-mute);font-size:10px;}
+
+/* price book */
+.price-item-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;}
+.price-item-head{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.price-item-name{font-weight:600;font-size:13px;}
+.price-item-base{font-size:13px;color:var(--smooth-orange);font-weight:600;}
+.price-item-meta{font-size:11px;color:var(--text-mute);margin-top:2px;}
+.price-sub-list{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.price-sub-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);padding:2px 0;}
+.price-history-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:var(--text-mute);}
+.price-item-edit-block{background:var(--panel2);border:1px solid var(--soft-purple);border-radius:10px;padding:10px;margin-bottom:8px;}
+.tier-row,.option-row{display:grid;grid-template-columns:1fr 90px 90px auto;gap:6px;align-items:center;margin-bottom:6px;}
+.tier-row input,.option-row input{padding:6px 8px;font-size:12px;}
+
+/* calculator */
+.calc-line{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);}
+.calc-total{display:flex;justify-content:space-between;padding:12px 0 4px;font-size:17px;font-weight:700;color:var(--smooth-orange);}
+.calc-option-toggle{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border);}
+.compare-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:8px;}
+.compare-table th,.compare-table td{text-align:start;padding:6px 8px;border-bottom:1px solid var(--border);}
+.compare-table th{color:var(--soft-purple);font-weight:600;font-size:11px;text-transform:uppercase;}
+.currency-row{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text-dim);margin-bottom:10px;}
+.currency-row input{width:90px;}
 </style>
 </head>
 <body>
@@ -224,6 +247,7 @@ button{cursor:pointer;}
         <button data-lang="ar">AR</button>
       </div>
       <button class="btn hidden" id="btnManageCats" data-t="manageCategories">Manage categories</button>
+      <button class="btn" id="btnCalculator">🧮 Cost Calculator</button>
       <button class="btn hidden" id="btnAdminPanel">🛡️ Admin</button>
       <button class="btn" id="btnExport" data-t="exportCsv">Export CSV</button>
       <button class="btn" id="btnImport" data-t="importCsv">Import CSV</button>
@@ -271,6 +295,7 @@ button{cursor:pointer;}
 <div class="panel" id="formPanel" style="width:min(560px,94vw)"></div>
 <div class="panel" id="categoryPanel" style="width:min(460px,94vw)"></div>
 <div class="panel" id="adminPanel" style="width:min(560px,94vw)"></div>
+<div class="panel" id="calcPanel" style="width:min(560px,94vw)"></div>
 
 <script>
 /* ================= CONFIG ================= */
@@ -561,6 +586,7 @@ async function loadStorage(){
       try{ arr = JSON.parse(row.value); }catch(e){ arr = []; }
       arr.forEach(s => {
         if(!s.categories) s.categories = s.category ? [s.category] : [];
+        if(!s.priceItems) s.priceItems = [];
         state.ownerMap[s.id] = row.user_id;
         s._ownerUsername = usersById[row.user_id] || row.user_id.slice(0,8);
         merged.push(s);
@@ -578,7 +604,7 @@ async function loadStorage(){
     try{
       const v = await loadOwnKV('colab_suppliers');
       state.suppliers = v ? JSON.parse(v) : [];
-      state.suppliers.forEach(s => { if(!s.categories) s.categories = s.category ? [s.category] : []; });
+      state.suppliers.forEach(s => { if(!s.categories) s.categories = s.category ? [s.category] : []; if(!s.priceItems) s.priceItems = []; });
     }catch(e){ state.suppliers = []; }
     try{
       const v = await loadOwnKV('colab_supplier_categories');
@@ -837,6 +863,12 @@ function openDetail(id){
     </div>
 
     <div class="section">
+      <div class="section-title">💰 Price Book</div>
+      ${priceBookHtml(s, isViewer)}
+      ${isViewer ? '' : `<button class="btn btn-sm" style="margin-top:8px" onclick="openPriceItemEditor('${s.id}', null)">+ Add item / service</button>`}
+    </div>
+
+    <div class="section">
       <div class="section-title">${esc(t('secLogistics'))}</div>
       ${row(t('fCity'), s.city)}
       ${row(t('fDelivery'), s.delivery)}
@@ -933,12 +965,352 @@ async function addLogEntry(id){
   renderGrid();
 }
 
+/* ================= Price Book ================= */
+function fmtDzd(n){
+  const num = Number(n)||0;
+  return num.toLocaleString('en-US') + ' DZD';
+}
+
+function priceForQty(item, qty){
+  qty = parseInt(qty) || 1;
+  let price = item.basePrice || 0;
+  if(item.tiers && item.tiers.length){
+    const sorted = item.tiers.slice().sort((a,b)=>(a.minQty||0)-(b.minQty||0));
+    for(const tier of sorted){
+      if(qty >= (tier.minQty||0)) price = tier.price;
+    }
+  }
+  return price;
+}
+
+function priceBookHtml(s, isViewer){
+  const items = s.priceItems || [];
+  if(items.length === 0){
+    return `<div class="field-row"><span class="field-label">—</span></div>`;
+  }
+  return items.map(item => {
+    const tiersHtml = (item.tiers||[]).length
+      ? `<div class="price-sub-list">${item.tiers.map(tr=>`<div class="price-sub-row"><span>Qty ${tr.minQty}+</span><span>${fmtDzd(tr.price)}</span></div>`).join('')}</div>`
+      : '';
+    const optionsHtml = (item.options||[]).length
+      ? `<div class="price-sub-list">${item.options.map(op=>`<div class="price-sub-row"><span>+ ${esc(op.name)}</span><span>+${fmtDzd(op.price)}</span></div>`).join('')}</div>`
+      : '';
+    const lastHistory = (item.priceHistory||[]).slice(-3).reverse();
+    const historyHtml = lastHistory.length
+      ? `<div class="price-sub-list">${lastHistory.map(h=>`<div class="price-history-row"><span>${esc(h.date)}</span><span>${fmtDzd(h.price)}</span></div>`).join('')}</div>`
+      : '';
+    return `<div class="price-item-card">
+      <div class="price-item-head">
+        <div>
+          <div class="price-item-name">${esc(item.name||'Untitled')}</div>
+          <div class="price-item-meta">${esc(item.unit||'')}</div>
+        </div>
+        <div class="price-item-base">${fmtDzd(item.basePrice)}</div>
+      </div>
+      ${tiersHtml}
+      ${optionsHtml}
+      ${historyHtml}
+      ${isViewer ? '' : `<div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-sm" onclick="openPriceItemEditor('${s.id}','${item.id}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePriceItem('${s.id}','${item.id}')">Delete</button>
+      </div>`}
+    </div>`;
+  }).join('');
+}
+
+function openPriceItemEditor(supplierId, itemId){
+  const s = state.suppliers.find(x=>x.id===supplierId);
+  if(!s) return;
+  s.priceItems = s.priceItems || [];
+  let item = itemId ? s.priceItems.find(i=>i.id===itemId) : emptyPriceItem();
+  if(!item) item = emptyPriceItem();
+  renderPriceItemEditor(s, item, !!itemId);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('formPanel').classList.add('open');
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+function renderPriceItemEditor(s, item, isEditing){
+  const tiersHtml = (item.tiers||[]).map(tr => `
+    <div class="tier-row" data-tid="${tr.id}">
+      <input type="text" class="tier-label" value="Qty ${tr.minQty}+" disabled>
+      <input type="number" class="tier-minqty" value="${tr.minQty}" placeholder="Min qty">
+      <input type="number" class="tier-price" value="${tr.price}" placeholder="Price">
+      <button class="btn btn-sm btn-danger" onclick="removeTierRow('${tr.id}')">✕</button>
+    </div>`).join('');
+  const optionsHtml = (item.options||[]).map(op => `
+    <div class="option-row" data-oid="${op.id}">
+      <input type="text" class="option-name" value="${esc(op.name)}" placeholder="Option name">
+      <input type="number" class="option-price" value="${op.price}" placeholder="Price" style="grid-column:2/4">
+      <button class="btn btn-sm btn-danger" onclick="removeOptionRow('${op.id}')">✕</button>
+    </div>`).join('');
+
+  document.getElementById('formPanel').innerHTML = `
+    <button class="panel-close" onclick="closePanels()">✕</button>
+    <h2>${isEditing ? 'Edit' : 'Add'} price item — ${esc(s.name)}</h2>
+
+    <div class="section">
+      <div class="form-field"><label>Item / service name</label><input type="text" id="pi_name" value="${esc(item.name)}" placeholder="e.g. Business Card Printing"></div>
+      <div class="form-grid">
+        <div class="form-field"><label>Unit</label><input type="text" id="pi_unit" value="${esc(item.unit)}" placeholder="e.g. per 100 cards"></div>
+        <div class="form-field"><label>Base price (DZD)</label><input type="number" id="pi_baseprice" value="${item.basePrice||0}"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Quantity tiers (optional)</div>
+      <p style="font-size:11px;color:var(--text-mute);margin:0 0 8px">Price changes based on quantity ordered. Leave empty for a flat price.</p>
+      <div id="tiersWrap">${tiersHtml}</div>
+      <button class="btn btn-sm" id="btnAddTier">+ Add tier</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Options / modifiers (optional)</div>
+      <p style="font-size:11px;color:var(--text-mute);margin:0 0 8px">Add-ons that stack on top of the base price (e.g. Recto-Verso, Pelliculage).</p>
+      <div id="optionsWrap">${optionsHtml}</div>
+      <button class="btn btn-sm" id="btnAddOption">+ Add option</button>
+    </div>
+
+    ${(item.priceHistory||[]).length ? `
+    <div class="section">
+      <div class="section-title">Price history</div>
+      ${item.priceHistory.slice().reverse().map(h=>`<div class="price-history-row"><span>${esc(h.date)}</span><span>${fmtDzd(h.price)}</span></div>`).join('')}
+    </div>` : ''}
+
+    <div style="display:flex;gap:8px;margin-top:20px;position:sticky;bottom:0;background:#1c0725;padding-top:10px">
+      <button class="btn btn-primary" style="flex:1" id="btnSavePriceItem">${esc(t('save'))}</button>
+      <button class="btn" style="flex:1" onclick="closePanels()">${esc(t('cancel'))}</button>
+    </div>
+  `;
+
+  document.getElementById('btnAddTier').addEventListener('click', () => {
+    item.tiers = item.tiers || [];
+    item.tiers.push(emptyTier());
+    renderPriceItemEditor(s, item, isEditing);
+  });
+  document.getElementById('btnAddOption').addEventListener('click', () => {
+    item.options = item.options || [];
+    item.options.push(emptyOption());
+    renderPriceItemEditor(s, item, isEditing);
+  });
+  document.getElementById('btnSavePriceItem').addEventListener('click', () => savePriceItem(s, item, isEditing));
+
+  window.__removeTierRowRef = (tid) => {
+    item.tiers = (item.tiers||[]).filter(tr=>tr.id!==tid);
+    renderPriceItemEditor(s, item, isEditing);
+  };
+  window.__removeOptionRowRef = (oid) => {
+    item.options = (item.options||[]).filter(op=>op.id!==oid);
+    renderPriceItemEditor(s, item, isEditing);
+  };
+}
+function removeTierRow(tid){ window.__removeTierRowRef(tid); }
+function removeOptionRow(oid){ window.__removeOptionRowRef(oid); }
+
+async function savePriceItem(s, item, isEditing){
+  const name = document.getElementById('pi_name').value.trim();
+  if(!name){ alert('Item name is required.'); return; }
+  const newBasePrice = parseFloat(document.getElementById('pi_baseprice').value) || 0;
+  const oldBasePrice = item.basePrice;
+
+  item.name = name;
+  item.unit = document.getElementById('pi_unit').value.trim();
+
+  document.querySelectorAll('#tiersWrap .tier-row').forEach((row, idx) => {
+    const tid = row.dataset.tid;
+    const t = item.tiers.find(x=>x.id===tid);
+    if(t){
+      t.minQty = parseInt(row.querySelector('.tier-minqty').value) || 0;
+      t.price = parseFloat(row.querySelector('.tier-price').value) || 0;
+    }
+  });
+  document.querySelectorAll('#optionsWrap .option-row').forEach(row => {
+    const oid = row.dataset.oid;
+    const o = item.options.find(x=>x.id===oid);
+    if(o){
+      o.name = row.querySelector('.option-name').value.trim();
+      o.price = parseFloat(row.querySelector('.option-price').value) || 0;
+    }
+  });
+
+  item.priceHistory = item.priceHistory || [];
+  if(!isEditing || oldBasePrice !== newBasePrice){
+    item.priceHistory.push({ date: todayStr(), price: newBasePrice });
+  }
+  item.basePrice = newBasePrice;
+
+  s.priceItems = s.priceItems || [];
+  if(!isEditing) s.priceItems.push(item);
+
+  await saveSuppliers(s);
+  logActivity(isEditing ? 'edit_price_item' : 'add_price_item', `${s.name} — ${item.name}`);
+  closePanels();
+  openDetail(s.id);
+  renderGrid();
+}
+
+async function deletePriceItem(supplierId, itemId){
+  if(!confirm('Delete this price item? This cannot be undone.')) return;
+  const s = state.suppliers.find(x=>x.id===supplierId);
+  if(!s) return;
+  s.priceItems = (s.priceItems||[]).filter(i=>i.id!==itemId);
+  await saveSuppliers(s);
+  logActivity('delete_price_item', s.name);
+  openDetail(supplierId);
+  renderGrid();
+}
+
+/* ================= Cost Calculator ================= */
+let calcState = { supplierId:null, itemId:null, qty:1, selectedOptions:{}, exchangeLabel:'', exchangeRate:0 };
+
+function openCalculator(){
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('calcPanel').classList.add('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('formPanel').classList.remove('open');
+  document.getElementById('categoryPanel').classList.remove('open');
+  document.getElementById('adminPanel').classList.remove('open');
+  renderCalculator();
+}
+
+function suppliersWithPriceItems(){
+  return state.suppliers.filter(s => (s.priceItems||[]).length > 0);
+}
+
+function renderCalculator(){
+  const suppliersList = suppliersWithPriceItems();
+  const supplierOptions = suppliersList.map(s => `<option value="${s.id}" ${calcState.supplierId===s.id?'selected':''}>${esc(s.name)}${s._ownerUsername?' ('+esc(s._ownerUsername)+')':''}</option>`).join('');
+
+  const selectedSupplier = suppliersList.find(s => s.id === calcState.supplierId) || suppliersList[0];
+  if(selectedSupplier && !calcState.supplierId) calcState.supplierId = selectedSupplier.id;
+
+  const items = selectedSupplier ? (selectedSupplier.priceItems||[]) : [];
+  if(items.length && !items.find(i=>i.id===calcState.itemId)) calcState.itemId = items[0].id;
+  const item = items.find(i => i.id === calcState.itemId);
+
+  let bodyHtml = '';
+  if(!selectedSupplier){
+    bodyHtml = `<div class="field-row">No suppliers have a price book yet. Add price items to a supplier first.</div>`;
+  } else if(item){
+    const itemOptions = items.map(i => `<option value="${i.id}" ${i.id===calcState.itemId?'selected':''}>${esc(i.name)}</option>`).join('');
+    const base = priceForQty(item, calcState.qty);
+    let optionsTotal = 0;
+    const optionsHtml = (item.options||[]).map(op => {
+      const checked = !!calcState.selectedOptions[op.id];
+      if(checked) optionsTotal += op.price;
+      return `<label class="calc-option-toggle">
+        <input type="checkbox" class="calc-opt-check" data-oid="${op.id}" ${checked?'checked':''}>
+        <span style="flex:1">${esc(op.name)}</span>
+        <span>+${fmtDzd(op.price)}</span>
+      </label>`;
+    }).join('');
+    const total = base + optionsTotal;
+
+    let convertedHtml = '';
+    if(calcState.exchangeRate > 0 && calcState.exchangeLabel){
+      const converted = total / calcState.exchangeRate;
+      convertedHtml = `<div class="calc-line"><span>≈ in ${esc(calcState.exchangeLabel)}</span><span>${converted.toLocaleString('en-US', {maximumFractionDigits:2})}</span></div>`;
+    }
+
+    // compare across other suppliers with same item name
+    const compareRows = suppliersList
+      .filter(s => s.id !== selectedSupplier.id)
+      .map(s => {
+        const match = (s.priceItems||[]).find(i => i.name.trim().toLowerCase() === item.name.trim().toLowerCase());
+        if(!match) return null;
+        return `<tr><td>${esc(s.name)}</td><td>${fmtDzd(priceForQty(match, calcState.qty))}</td></tr>`;
+      })
+      .filter(Boolean);
+    const compareHtml = compareRows.length ? `
+      <div class="section">
+        <div class="section-title">Compare across suppliers — "${esc(item.name)}"</div>
+        <table class="compare-table">
+          <tr><th>Supplier</th><th>Price</th></tr>
+          <tr><td><strong>${esc(selectedSupplier.name)}</strong></td><td><strong>${fmtDzd(base)}</strong></td></tr>
+          ${compareRows.join('')}
+        </table>
+      </div>` : '';
+
+    bodyHtml = `
+      <div class="form-field"><label>Supplier</label><select id="calc_supplier">${supplierOptions}</select></div>
+      <div class="form-field"><label>Item / service</label><select id="calc_item">${itemOptions}</select></div>
+      <div class="form-field"><label>Quantity</label><input type="number" id="calc_qty" min="1" value="${calcState.qty}"></div>
+
+      ${(item.options||[]).length ? `<div class="section"><div class="section-title">Options</div>${optionsHtml}</div>` : ''}
+
+      <div class="section">
+        <div class="calc-line"><span>Base price ${(item.tiers||[]).length?'(tier for qty '+calcState.qty+')':''}</span><span>${fmtDzd(base)}</span></div>
+        ${(item.options||[]).filter(op=>calcState.selectedOptions[op.id]).map(op=>`<div class="calc-line"><span>+ ${esc(op.name)}</span><span>+${fmtDzd(op.price)}</span></div>`).join('')}
+        <div class="calc-total"><span>Total cost to us</span><span>${fmtDzd(total)}</span></div>
+        ${convertedHtml}
+      </div>
+
+      <div class="section">
+        <div class="section-title">Currency display (optional)</div>
+        <div class="currency-row">
+          <span>1</span>
+          <input type="text" id="calc_currlabel" value="${esc(calcState.exchangeLabel)}" placeholder="EUR">
+          <span>=</span>
+          <input type="number" id="calc_currrate" value="${calcState.exchangeRate||''}" placeholder="280">
+          <span>DZD</span>
+          <button class="btn btn-sm" id="btnApplyRate">Apply</button>
+        </div>
+      </div>
+
+      ${compareHtml}
+    `;
+  } else {
+    bodyHtml = `<div class="field-row">This supplier has no price items yet.</div>`;
+  }
+
+  document.getElementById('calcPanel').innerHTML = `
+    <button class="panel-close" onclick="closePanels()">✕</button>
+    <h2>🧮 Cost Calculator</h2>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:4px">Internal cost only — this is what it costs Colab., not a client price.</p>
+    <div class="section">${bodyHtml}</div>
+  `;
+
+  if(!selectedSupplier) return;
+
+  const supplierSel = document.getElementById('calc_supplier');
+  if(supplierSel) supplierSel.addEventListener('change', e => {
+    calcState.supplierId = e.target.value;
+    calcState.itemId = null;
+    calcState.selectedOptions = {};
+    renderCalculator();
+  });
+  const itemSel = document.getElementById('calc_item');
+  if(itemSel) itemSel.addEventListener('change', e => {
+    calcState.itemId = e.target.value;
+    calcState.selectedOptions = {};
+    renderCalculator();
+  });
+  const qtyInput = document.getElementById('calc_qty');
+  if(qtyInput) qtyInput.addEventListener('input', e => {
+    calcState.qty = parseInt(e.target.value) || 1;
+    renderCalculator();
+  });
+  document.querySelectorAll('.calc-opt-check').forEach(cb => {
+    cb.addEventListener('change', e => {
+      calcState.selectedOptions[e.target.dataset.oid] = e.target.checked;
+      renderCalculator();
+    });
+  });
+  const applyRateBtn = document.getElementById('btnApplyRate');
+  if(applyRateBtn) applyRateBtn.addEventListener('click', () => {
+    calcState.exchangeLabel = document.getElementById('calc_currlabel').value.trim();
+    calcState.exchangeRate = parseFloat(document.getElementById('calc_currrate').value) || 0;
+    renderCalculator();
+  });
+}
+
 function closePanels(){
   document.getElementById('overlay').classList.remove('open');
   document.getElementById('detailPanel').classList.remove('open');
   document.getElementById('formPanel').classList.remove('open');
   document.getElementById('categoryPanel').classList.remove('open');
   document.getElementById('adminPanel').classList.remove('open');
+  document.getElementById('calcPanel').classList.remove('open');
   editingId = null;
 }
 document.getElementById('overlay').addEventListener('click', closePanels);
@@ -951,7 +1323,19 @@ function emptySupplier(){
     paymentTerms:'', paymentMethod:'', bankInfo:'', invoiceHistory:'',
     city:'', delivery:'', turnaround:'', minQty:'', languages:'', priceRange:'', lastQuoted:'',
     social:'', website:'', portfolio:'', photos:[], priceList:'', catalog:'', contract:'',
-    howMet:'', projects:'', lastContacted:'', log:[], createdAt: new Date().toISOString() };
+    howMet:'', projects:'', lastContacted:'', log:[], priceItems:[], createdAt: new Date().toISOString() };
+}
+
+function emptyPriceItem(){
+  return { id: 'pi_' + Math.random().toString(36).slice(2,10), name:'', unit:'', basePrice:0,
+    priceHistory:[], tiers:[], options:[] };
+}
+function emptyTier(){ return { id: 'tier_' + Math.random().toString(36).slice(2,8), minQty:0, price:0 }; }
+function emptyOption(){ return { id: 'opt_' + Math.random().toString(36).slice(2,8), name:'', price:0 }; }
+
+function todayStr(){
+  const d = new Date();
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
 }
 
 function checkDuplicate(supplier){
@@ -1552,6 +1936,7 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
 document.getElementById('btnAdd').addEventListener('click', () => openForm(null));
 document.getElementById('btnManageCats').addEventListener('click', () => openCategoryManager(false));
 document.getElementById('btnAdminPanel').addEventListener('click', () => openAdminPanel());
+document.getElementById('btnCalculator').addEventListener('click', () => openCalculator());
 document.getElementById('btnExport').addEventListener('click', exportCsv);
 document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
 document.getElementById('fileImport').addEventListener('change', (e) => {
